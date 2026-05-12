@@ -37,7 +37,7 @@ app.use('*', cors({
 // 2. Auth Middleware & Supabase Admin Initialization
 app.use('*', async (c, next) => {
   const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = honoEnv<Bindings>(c);
-  
+
   // Initialize Supabase Admin for this request
   const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
   c.set('supabaseAdmin', supabaseAdmin);
@@ -68,7 +68,7 @@ app.use('*', async (c, next) => {
 
   c.set('userId', user.id);
   c.set('githubUsername', user.user_metadata?.user_name || user.user_metadata?.preferred_username || '');
-  
+
   await next();
 });
 

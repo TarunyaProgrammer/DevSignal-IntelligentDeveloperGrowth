@@ -82,7 +82,7 @@ app.get('/repos/:id', async (c) => {
       }
     };
 
-    const [languages, contributors, activity, readme] = await Promise.all([
+    const [languages, contributors, activity] = await Promise.all([
       safeFetch(
         octokit.rest.repos.listLanguages({ owner, repo: name }).then(r => r.data),
         'languages',
@@ -102,16 +102,6 @@ app.get('/repos/:id', async (c) => {
         octokit.rest.repos.getCommitActivityStats({ owner, repo: name }).then(r => r.data),
         'activity',
         []
-      ),
-      safeFetch(
-        octokit.rest.repos.getReadme({ owner, repo: name }).then(r => {
-          // Use globalThis.atob or Buffer depending on environment
-          // In Cloudflare Workers, globalThis.atob is available
-          const content = r.data.content.replace(/\s/g, '');
-          return decodeURIComponent(escape(atob(content)));
-        }),
-        'readme',
-        ''
       )
     ]);
 
@@ -119,7 +109,7 @@ app.get('/repos/:id', async (c) => {
       languages: languages || {},
       contributors: contributors || [],
       activity: Array.isArray(activity) ? activity.slice(-12) : [],
-      readme: readme || ''
+      readme: ''
     };
 
     // Cache the result

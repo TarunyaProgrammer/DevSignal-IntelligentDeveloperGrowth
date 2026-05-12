@@ -57,6 +57,7 @@ export default function App() {
                   <Route path="/resources" element={<Resources />} />
                   <Route path="/learning-path/:courseId" element={<LearningPathPage />} />
                   <Route path="/editor" element={<Editor />} />
+                  <Route path="/editor/:id" element={<Editor />} />
                   <Route path="/profile" element={<Profile />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />

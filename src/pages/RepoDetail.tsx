@@ -1,11 +1,13 @@
+import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { 
-  ArrowLeft, 
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  ArrowLeft,
   ExternalLink,
   GitPullRequest, AlertCircle,
-  Terminal, Star, Zap
+  Terminal, Star, Zap, X
 } from 'lucide-react';
+import { WebContainerTerminal } from '@/components/terminal/WebContainerTerminal';
 import { useRepo } from '@/hooks/queries';
 import { ActivityChart } from '@/components/dashboard/ActivityChart';
 import { cn } from '@/lib/utils';
@@ -29,7 +31,7 @@ const COLOR_MAP: Record<string, string> = {
 function IndustrialMetric({ label, value, icon: Icon, color }: { label: string, value: string | number, icon: React.ElementType, color: string }) {
   const iconStyle = color && COLOR_MAP[color] ? COLOR_MAP[color] : 'text-primary bg-primary/10 border-primary/20';
   return (
-    <motion.div 
+    <motion.div
       whileHover={{ y: -5 }}
       className="glass-panel p-8 flex flex-col justify-between h-full group border-white/5 hover:border-primary/20 transition-all duration-500 shadow-xl"
     >
@@ -58,7 +60,7 @@ export function RepoDetail() {
   if (isLoading) {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center space-y-8 px-6">
-        <motion.div 
+        <motion.div
           animate={{ rotate: 360, scale: [1, 1.1, 1] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           className="w-20 h-20 border-2 border-primary/10 border-t-primary rounded-full shadow-[0_0_30px_-5px_rgba(222,219,200,0.3)]"
@@ -89,14 +91,14 @@ export function RepoDetail() {
   }
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, ease: SMOOTH_EASE }}
       className="relative min-h-screen space-y-12 pb-32 px-4 md:px-0"
     >
       <SEO title={`${repo.name} | Node Intelligence`} description={repo.description || undefined} />
-      
+
       {/* Background elements */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[150px] opacity-60" />
@@ -105,43 +107,41 @@ export function RepoDetail() {
       <div className="relative z-10 space-y-12">
         {/* Navigation */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-8 border-b border-white/5 pb-8">
-          <button 
+          <button
             onClick={() => navigate(-1)}
             className="group flex items-center gap-4 text-xs font-bold text-primary/40 hover:text-primary transition-all uppercase tracking-widest"
           >
             <div className="w-10 h-10 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-center group-hover:bg-primary/10 group-hover:border-primary/20 transition-all shadow-sm">
-               <ArrowLeft size={18} />
+              <ArrowLeft size={18} />
             </div>
             Return to Matrix
           </button>
 
-          <motion.a 
+          <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            href={repo.url} 
-            target="_blank" 
-            rel="noopener noreferrer"
+            onClick={() => navigate(`/editor/${id}`)}
             className="px-8 py-3.5 rounded-2xl bg-primary text-black text-xs font-bold uppercase tracking-[0.2em] hover:shadow-xl hover:shadow-primary/20 transition-all flex items-center gap-4"
           >
-            Terminal View <ExternalLink size={18} />
-          </motion.a>
+            Open in Editor <Terminal size={18} />
+          </motion.button>
         </div>
 
         {/* Cinematic Header */}
         <section className="relative w-full h-[300px] md:h-[450px] rounded-[2rem] md:rounded-[3.5rem] overflow-hidden group shadow-2xl">
-          <video 
-            src="https://www.pexels.com/download/video/12692028/" 
-            autoPlay 
-            loop 
-            muted 
-            playsInline 
+          <video
+            src="https://www.pexels.com/download/video/12692028/"
+            autoPlay
+            loop
+            muted
+            playsInline
             className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-[3000ms] ease-out grayscale-[0.2]"
           />
           <div className="absolute inset-0 noise-overlay opacity-[0.4] mix-blend-overlay pointer-events-none" />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-          
+
           <div className="absolute bottom-0 left-0 p-10 md:p-16 space-y-6 z-10">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3, duration: 1, ease: SMOOTH_EASE }}
@@ -151,7 +151,7 @@ export function RepoDetail() {
               Intelligence Layer: <span className="font-serif italic ml-1">{repo.language || 'MULTI_ARRAY'}</span>
             </motion.div>
             <h1 className="text-5xl md:text-8xl font-bold tracking-tighter text-text leading-[0.9]">
-               {repo.name.includes('/') ? repo.name.split('/')[1] : repo.name}
+              {repo.name.includes('/') ? repo.name.split('/')[1] : repo.name}
             </h1>
             <p className="text-primary/60 font-medium max-w-2xl text-sm md:text-lg leading-relaxed">
               {repo.description || 'Systemized repository node synchronized for high-fidelity architectural analysis and real-time contribution telemetry.'}
@@ -161,7 +161,7 @@ export function RepoDetail() {
 
         {/* Analytics Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-          
+
           {/* Activity Graph */}
           <div className="lg:col-span-8 space-y-10">
             <div className="glass-panel p-8 md:p-12 rounded-[2.5rem] border-white/5 relative overflow-hidden group">
@@ -231,7 +231,7 @@ export function RepoDetail() {
         </div>
 
         {/* Contributors */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -240,7 +240,7 @@ export function RepoDetail() {
         >
           <div className="absolute top-0 left-0 w-96 h-96 bg-primary/5 blur-[100px] rounded-full pointer-events-none opacity-40" />
           <h3 className="text-2xl font-bold mb-12 border-b border-white/5 pb-8 flex items-center gap-5 text-white uppercase tracking-wider relative z-10">
-             Archival <span className="text-primary font-serif italic">Collective</span>
+            Archival <span className="text-primary font-serif italic">Collective</span>
           </h3>
           <div className="relative z-10">
             <ContributorGrid contributors={repo.contributors} />
