@@ -13,6 +13,11 @@ export function useRepo(id: string) {
     queryKey: ['repos', id],
     queryFn: () => fetchRepo(id).then(d => d.repo),
     enabled: !!id,
+    // Automatically poll if activity is null (Computing state)
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      return data && data.activity === null ? 5000 : false;
+    },
   });
 }
 

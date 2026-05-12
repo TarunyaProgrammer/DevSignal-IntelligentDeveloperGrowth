@@ -20,10 +20,10 @@ export function RepoCard({ id, name, description, stars, forks, language, url }:
     <motion.div 
       onClick={() => navigate(`/repo/${id}`)}
       whileHover={{ y: -5, scale: 1.01 }}
-      className="glass-panel p-6 cursor-pointer flex flex-col justify-between group h-full transition-all duration-500 border-white/5 hover:border-primary/20 hover:shadow-[0_0_30px_-10px_rgba(222,219,200,0.2)]"
+      className="glass-panel p-6 cursor-pointer flex flex-col justify-between group h-full transition-all duration-500 border-border/10 hover:border-primary/40 hover:shadow-[0_8px_32px_-10px_rgba(166,124,0,0.15)] shadow-sm"
     >
       <div className="space-y-5">
-        <div className="flex items-center justify-between border-b border-white/5 pb-4">
+        <div className="flex items-center justify-between border-b border-border/40 pb-4">
           <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center border border-primary/10">
             <Code size={20} strokeWidth={2} />
           </div>
@@ -40,7 +40,7 @@ export function RepoCard({ id, name, description, stars, forks, language, url }:
           <h4 className="text-lg font-bold text-text group-hover:text-primary transition-colors leading-tight line-clamp-1" title={name}>
             {name}
           </h4>
-          <p className="text-sm text-primary/50 line-clamp-2 leading-relaxed font-medium">
+          <p className="text-sm text-text-muted/80 line-clamp-2 leading-relaxed font-medium">
             {description || 'No intelligence description provided for this node.'}
           </p>
         </div>

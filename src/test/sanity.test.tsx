@@ -34,9 +34,9 @@ function createWrapper() {
 }
 
 describe('NotFound page', () => {
-  it('renders 404 text and back link', () => {
+  it('renders 404 text and back link', async () => {
     render(<NotFound />, { wrapper: createWrapper() })
-    expect(screen.getByText('404')).toBeInTheDocument()
+    expect(await screen.findByText('404')).toBeInTheDocument()
     expect(screen.getByText('Reboot Dashboard')).toBeInTheDocument()
   })
 })

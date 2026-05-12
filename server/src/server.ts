@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { env as honoEnv } from 'hono/adapter';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { syncRoutes } from './routes/sync.js';
 import { repoRoutes } from './routes/repos.js';
 import { analyticsRoutes } from './routes/analytics.js';
@@ -19,7 +19,7 @@ type Bindings = {
 type Variables = {
   userId: string;
   githubUsername: string;
-  supabaseAdmin: any;
+  supabaseAdmin: SupabaseClient;
 };
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();

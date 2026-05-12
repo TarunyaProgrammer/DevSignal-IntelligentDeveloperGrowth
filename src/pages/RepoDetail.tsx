@@ -61,7 +61,7 @@ export function RepoDetail() {
         <motion.div 
           animate={{ rotate: 360, scale: [1, 1.1, 1] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          className="w-20 h-20 border-2 border-primary/10 border-t-primary rounded-full shadow-[0_0_30px_-5px_rgba(222,219,200,0.3)]"
+          className="w-20 h-20 border-2 border-primary/10 border-t-primary rounded-full shadow-[0_0_30px_-5px_rgba(212,175,55,0.3)]"
         />
         <div className="text-center space-y-3">
           <p className="text-xl font-bold tracking-tight text-primary uppercase tracking-[0.2em]">Synchronizing Intelligence Node</p>

@@ -13,6 +13,7 @@ import { LearningPathPage } from './pages/LearningPathPage';
 import { Editor } from './pages/Editor';
 import { RepoDetail } from './pages/RepoDetail';
 import { Profile } from './pages/Profile';
+import { DebugChartPage } from './DebugChartPage';
 import { NotFound } from './pages/NotFound';
 import { CustomCursor } from './components/layout/CustomCursor';
 
@@ -58,6 +59,7 @@ export default function App() {
                   <Route path="/learning-path/:courseId" element={<LearningPathPage />} />
                   <Route path="/editor" element={<Editor />} />
                   <Route path="/profile" element={<Profile />} />
+                  <Route path="/debug-chart" element={<DebugChartPage />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>

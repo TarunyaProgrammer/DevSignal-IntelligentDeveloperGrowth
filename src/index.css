@@ -23,8 +23,8 @@
     --border: #DEDAC2;
     --text: #1C1B17; /* Deep Charcoal/Black for contrast */
     --text-muted: #6B685B;
-    --primary: #8C783D; /* Slightly darker gold for light mode readability */
-    --primary-hover: #756432;
+    --primary: #A67C00; /* Deep Cinematic Gold */
+    --primary-hover: #806000;
   }
 
   .dark {
@@ -34,8 +34,8 @@
     --border: #262626;
     --text: #E1E0CC;
     --text-muted: #9A9887;
-    --primary: #DEDBC8;
-    --primary-hover: #C5C2B1;
+    --primary: #D4AF37; /* Metallic Gold */
+    --primary-hover: #B8860B;
   }
 
   body {
@@ -60,7 +60,7 @@
 
 @layer utilities {
   .glass-panel {
-    @apply bg-surface/60 backdrop-blur-xl border border-border/50 shadow-[0_4px_24px_rgba(0,0,0,0.02)] rounded-2xl transition-all duration-300;
+    @apply bg-surface/60 backdrop-blur-xl border border-border/50 shadow-[0_4px_24px_rgba(28,27,23,0.05)] rounded-2xl transition-all duration-300;
   }
 
   .dark .glass-panel {
@@ -68,7 +68,7 @@
   }
 
   .glass-panel:hover {
-    @apply bg-surface-hover/60 border-primary/30 shadow-[0_8px_32px_rgba(16,185,129,0.08)];
+    @apply bg-surface-hover/60 border-primary/30 shadow-[0_8px_32px_rgba(166,124,0,0.12)];
   }
 
   .dark .glass-panel:hover {

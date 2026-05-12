@@ -1,10 +1,11 @@
 import { Hono } from 'hono';
 import { Octokit } from 'octokit';
 import { env as honoEnv } from 'hono/adapter';
+import { type SupabaseClient } from '@supabase/supabase-js';
 
 const app = new Hono<{ 
   Bindings: { GITHUB_TOKEN: string }; 
-  Variables: { userId: string; githubUsername: string; supabaseAdmin: any };
+  Variables: { userId: string; githubUsername: string; supabaseAdmin: SupabaseClient };
 }>();
 
 app.get('/activity', async (c) => {
@@ -61,9 +62,9 @@ app.get('/activity', async (c) => {
         let description = '';
 
         switch (event.type) {
-          case 'PushEvent':
+          case 'PushEvent': {
             type = 'commit';
-            const payload = event.payload as any;
+            const payload = event.payload as { commits?: { message?: string }[]; head?: string; ref?: string };
             const commits = payload.commits || [];
             
             if (Array.isArray(commits) && commits.length > 0) {
@@ -77,17 +78,22 @@ app.get('/activity', async (c) => {
             
             description = `Pushed to ${event.repo.name}`;
             break;
-          case 'PullRequestEvent':
-            const pr = (event.payload as any).pull_request;
-            type = (event.payload as any).action === 'closed' && pr.merged ? 'merge' : 'pr';
+          }
+          case 'PullRequestEvent': {
+            const payload = event.payload as { pull_request?: { title?: string; merged?: boolean }; action?: string };
+            const pr = payload.pull_request;
+            type = payload.action === 'closed' && pr?.merged ? 'merge' : 'pr';
             title = pr?.title || 'PR Activity';
-            description = `${(event.payload as any).action} PR in ${event.repo.name}`;
+            description = `${payload.action} PR in ${event.repo.name}`;
             break;
-          case 'IssuesEvent':
+          }
+          case 'IssuesEvent': {
+            const payload = event.payload as { issue?: { title?: string }; action?: string };
             type = 'issue';
-            title = (event.payload as any).issue?.title || 'Issue Activity';
-            description = `${(event.payload as any).action} issue in ${event.repo.name}`;
+            title = payload.issue?.title || 'Issue Activity';
+            description = `${payload.action} issue in ${event.repo.name}`;
             break;
+          }
           default:
             return null;
         }

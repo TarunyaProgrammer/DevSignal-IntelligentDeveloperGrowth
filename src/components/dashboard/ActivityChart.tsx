@@ -5,14 +5,17 @@ interface ActivityChartProps {
     total: number;
     week: number;
     days: number[];
-  }[];
+  }[] | null;
 }
 
 export function ActivityChart({ data }: ActivityChartProps) {
-  // Check if data is missing or empty (GitHub returns 202 during computation)
-  const isComputing = !data || (Array.isArray(data) && data.length === 0);
+  // data is undefined when still fetching from API
+  // data is null when the API returns 202 (Accepted/Computing)
+  // data is [] when the API returned no results or is empty
+  const isLoading = data === undefined || data === null;
+  const isEmpty = Array.isArray(data) && data.length === 0;
 
-  if (isComputing) {
+  if (isLoading) {
     return (
       <div className="h-56 flex flex-col items-center justify-center text-text-muted space-y-4 rounded-2xl bg-surface-hover/30 border border-border border-dashed">
         <div className="flex gap-2.5">
@@ -25,7 +28,24 @@ export function ActivityChart({ data }: ActivityChartProps) {
             />
           ))}
         </div>
-        <p className="text-xs font-semibold uppercase tracking-widest animate-pulse text-primary">Syncing Activity Pulse...</p>
+        <p className="text-xs font-semibold uppercase tracking-widest animate-pulse text-primary">
+          {data === null ? "GitHub is computing activity stats..." : "Syncing Activity Pulse..."}
+        </p>
+      </div>
+    );
+  }
+
+  if (isEmpty) {
+    return (
+      <div className="h-56 flex flex-col items-center justify-center text-text-muted space-y-4 rounded-2xl bg-surface-hover/30 border border-border border-dashed group">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-center space-y-2"
+        >
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary/40">Signal Void Detected</p>
+          <p className="text-xs font-medium text-text-muted px-12">No commit activity vectors found in the last 12 months. This repository node may be dormant or restricted.</p>
+        </motion.div>
       </div>
     );
   }
@@ -37,7 +57,9 @@ export function ActivityChart({ data }: ActivityChartProps) {
 
   // Generate points for the sparkline
   const points = data.map((week, i) => {
-    const x = (i / (data.length - 1)) * (width - 2 * padding) + padding;
+    // Prevent division by zero if there's only one data point
+    const denominator = data.length > 1 ? data.length - 1 : 1;
+    const x = (i / denominator) * (width - 2 * padding) + padding;
     const y = height - (week.total / maxCommits) * (height - 2 * padding) - padding;
     return { x, y, total: week.total };
   });
@@ -55,8 +77,8 @@ export function ActivityChart({ data }: ActivityChartProps) {
 
   return (
     <div className="relative group rounded-2xl border border-border bg-surface overflow-hidden">
-      <div className="absolute top-4 right-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-full z-10 shadow-sm border border-emerald-500/20">
-        <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse" />
+      <div className="absolute top-4 right-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary bg-primary/10 px-3 py-1.5 rounded-full z-10 shadow-sm border border-primary/20">
+        <span className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(212,175,55,0.8)] animate-pulse" />
         Pulse: Active
       </div>
 

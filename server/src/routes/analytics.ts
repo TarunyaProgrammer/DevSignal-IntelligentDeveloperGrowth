@@ -1,7 +1,8 @@
 import { Hono } from 'hono';
+import { type SupabaseClient } from '@supabase/supabase-js';
 
 const app = new Hono<{ 
-  Variables: { userId: string; supabaseAdmin: any };
+  Variables: { userId: string; supabaseAdmin: SupabaseClient };
 }>();
 
 // GET /api/analytics — aggregated stats for user
@@ -19,9 +20,9 @@ app.get('/analytics', async (c) => {
   }
 
   const total_repos = repos.length;
-  const total_stars = repos.reduce((s: any, r: any) => s + (r.stars || 0), 0);
-  const total_forks = repos.reduce((s: any, r: any) => s + (r.forks || 0), 0);
-  const total_issues = repos.reduce((s: any, r: any) => s + (r.open_issues || 0), 0);
+  const total_stars = repos.reduce((s: number, r) => s + (r.stars || 0), 0);
+  const total_forks = repos.reduce((s: number, r) => s + (r.forks || 0), 0);
+  const total_issues = repos.reduce((s: number, r) => s + (r.open_issues || 0), 0);
 
   const languages: Record<string, number> = {};
   for (const r of repos) {

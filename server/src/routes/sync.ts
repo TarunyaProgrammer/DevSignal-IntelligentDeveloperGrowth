@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { type SupabaseClient } from '@supabase/supabase-js';
 import { Octokit } from 'octokit';
 import { z } from 'zod';
 import { env as honoEnv } from 'hono/adapter';
@@ -12,7 +13,7 @@ const syncBodySchema = z.object({
 
 const app = new Hono<{ 
   Bindings: { GITHUB_TOKEN: string }; 
-  Variables: { userId: string; supabaseAdmin: any };
+  Variables: { userId: string; supabaseAdmin: SupabaseClient };
 }>();
 
 app.post('/sync', async (c) => {
@@ -89,9 +90,9 @@ app.get('/metrics', async (c) => {
   }
 
   const total_repos = data.length;
-  const total_stars = data.reduce((s: any, r: any) => s + (r.stars || 0), 0);
-  const total_forks = data.reduce((s: any, r: any) => s + (r.forks || 0), 0);
-  const total_issues = data.reduce((s: any, r: any) => s + (r.open_issues || 0), 0);
+  const total_stars = data.reduce((s: number, r) => s + (r.stars || 0), 0);
+  const total_forks = data.reduce((s: number, r) => s + (r.forks || 0), 0);
+  const total_issues = data.reduce((s: number, r) => s + (r.open_issues || 0), 0);
   const languages: Record<string, number> = {};
   for (const r of data) {
     if (r.language) languages[r.language] = (languages[r.language] || 0) + 1;

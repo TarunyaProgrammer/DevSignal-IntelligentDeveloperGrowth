@@ -131,7 +131,7 @@ function MetricBox({ title, value, suffix, icon: Icon }: MetricBoxProps) {
         <h4 className="text-4xl font-semibold tracking-tight leading-none text-text">{value}</h4>
         <div className="space-y-1">
           <p className="text-sm font-medium text-text-muted">{title}</p>
-          <p className="text-xs text-text-muted/60 uppercase tracking-wider">{suffix}</p>
+          <p className="text-xs text-text-muted/80 uppercase tracking-wider">{suffix}</p>
         </div>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { type SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 
 const createSnippetSchema = z.object({
@@ -14,7 +15,7 @@ const updateSnippetSchema = z.object({
 });
 
 const app = new Hono<{ 
-  Variables: { userId: string; supabaseAdmin: any };
+  Variables: { userId: string; supabaseAdmin: SupabaseClient };
 }>();
 
 // GET /api/snippets — list user's saved snippets

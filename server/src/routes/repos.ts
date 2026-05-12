@@ -1,11 +1,12 @@
 import { Hono } from 'hono';
 import { Octokit } from 'octokit';
 import { env as honoEnv } from 'hono/adapter';
+import { type SupabaseClient } from '@supabase/supabase-js';
 import { getCache, setCache } from '../utils/cache.js';
 
 const app = new Hono<{ 
   Bindings: { GITHUB_TOKEN: string }; 
-  Variables: { userId: string; supabaseAdmin: any };
+  Variables: { userId: string; supabaseAdmin: SupabaseClient };
 }>();
 
 // GET /api/repos — list user's synced repositories
@@ -49,7 +50,7 @@ app.get('/repos/:id', async (c) => {
   
   // Check cache unless refresh is requested
   if (!refreshRequested) {
-    const cachedDetails = getCache<any>(cacheKey);
+    const cachedDetails = getCache<Record<string, unknown>>(cacheKey);
     if (cachedDetails) {
       // Serving repo details from cache
       return c.json({ repo: { ...repo, ...cachedDetails } });
@@ -76,8 +77,10 @@ app.get('/repos/:id', async (c) => {
       try {
         const result = await promise;
         return result;
-      } catch (err: any) {
-        console.warn({ err: err.message, status: err.status, label }, `Failed to fetch ${label}`);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Unknown error';
+        const status = (err as { status?: number }).status;
+        console.warn({ err: message, status, label }, `Failed to fetch ${label}`);
         return fallback;
       }
     };
@@ -98,15 +101,21 @@ app.get('/repos/:id', async (c) => {
         'contributors',
         []
       ),
-      safeFetch(
-        octokit.rest.repos.getCommitActivityStats({ owner, repo: name }).then(r => r.data),
-        'activity',
-        []
-      ),
+      // Specialized fetch for activity to handle 202 Computing status
+      (async () => {
+        try {
+          const r = await octokit.rest.repos.getCommitActivityStats({ owner, repo: name });
+          if (r.status === 202) return null; // Still computing
+          return r.data;
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : 'Unknown error';
+          const status = (err as { status?: number }).status;
+          console.warn({ err: message, status }, 'Failed to fetch activity');
+          return []; // True error or no data
+        }
+      })(),
       safeFetch(
         octokit.rest.repos.getReadme({ owner, repo: name }).then(r => {
-          // Use globalThis.atob or Buffer depending on environment
-          // In Cloudflare Workers, globalThis.atob is available
           const content = r.data.content.replace(/\s/g, '');
           return decodeURIComponent(escape(atob(content)));
         }),
@@ -118,12 +127,14 @@ app.get('/repos/:id', async (c) => {
     const extendedDetails = {
       languages: languages || {},
       contributors: contributors || [],
-      activity: Array.isArray(activity) ? activity.slice(-12) : [],
+      activity: Array.isArray(activity) ? activity.slice(-12) : activity, // activity could be null here
       readme: readme || ''
     };
 
     // Cache the result
-    setCache(cacheKey, extendedDetails);
+    // If activity is null (Computing 202), cache for a very short time to allow retry
+    const cacheTTL = extendedDetails.activity === null ? 30 : 3600;
+    setCache(cacheKey, extendedDetails, cacheTTL);
 
     return c.json({ repo: { ...repo, ...extendedDetails } });
   } catch (err) {

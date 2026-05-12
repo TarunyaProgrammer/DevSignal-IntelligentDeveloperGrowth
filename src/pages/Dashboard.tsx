@@ -72,7 +72,7 @@ export function Dashboard() {
           className="absolute inset-0 w-full h-full object-cover grayscale-[0.3] group-hover:scale-110 transition-transform duration-[3000ms] ease-out"
         />
         <div className="absolute inset-0 noise-overlay opacity-[0.5] mix-blend-overlay pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/30 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/60 to-transparent" />
         
         <div className="absolute inset-0 flex flex-col justify-end p-8 md:p-16 space-y-4 md:space-y-6">
           <motion.div 
@@ -94,7 +94,7 @@ export function Dashboard() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6, duration: 1 }}
-            className="text-text/60 font-medium max-w-xl text-sm md:text-lg leading-relaxed"
+            className="text-text/80 font-medium max-w-xl text-sm md:text-lg leading-relaxed"
           >
             Decoding <span className="text-primary font-bold">{(repos || []).length}</span> repository vectors. 
             Your velocity matrix is reaching optimal performance thresholds.
@@ -105,7 +105,7 @@ export function Dashboard() {
       {/* Header & Sync */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-border pb-10">
         <div className="space-y-3">
-          <div className="flex items-center gap-3 text-xs md:text-sm text-text/40 font-bold uppercase tracking-[0.2em]">
+          <div className="flex items-center gap-3 text-xs md:text-sm text-text/60 font-bold uppercase tracking-[0.2em]">
             <Database size={18} className="text-primary/60" />
             <span>Telemetry Overview</span>
           </div>

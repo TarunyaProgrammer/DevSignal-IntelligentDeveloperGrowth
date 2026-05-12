@@ -1,5 +1,5 @@
 // Simple in-memory cache for Cloudflare Workers (persists as long as isolate is warm)
-const cacheMap = new Map<string, { value: any; expires: number }>();
+const cacheMap = new Map<string, { value: unknown; expires: number }>();
 
 export const getCache = <T>(key: string): T | undefined => {
   const item = cacheMap.get(key);

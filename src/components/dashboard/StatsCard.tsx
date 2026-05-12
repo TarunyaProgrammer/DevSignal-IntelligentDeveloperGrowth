@@ -28,10 +28,10 @@ export function StatsCard({ title, value, icon: Icon, trend, color }: StatsCardP
   return (
     <motion.div 
       whileHover={{ y: -5 }}
-      className="glass-panel p-6 flex flex-col justify-between h-full relative overflow-hidden group border-white/5 hover:border-primary/20 transition-all duration-500"
+      className="glass-panel p-6 flex flex-col justify-between h-full relative overflow-hidden group border-border/10 hover:border-primary/40 transition-all duration-500 shadow-sm hover:shadow-xl"
     >
       <div className="flex items-start justify-between">
-        <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:scale-110", colorClasses, "border border-white/5 group-hover:border-primary/30")}>
+        <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:scale-110", colorClasses, "border border-border/20 group-hover:border-primary/30 shadow-sm")}>
           <Icon size={22} strokeWidth={2} />
         </div>
         {trend && (

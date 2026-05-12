@@ -11,7 +11,7 @@ export function Header() {
   const displayName = user?.user_metadata?.full_name || user?.user_metadata?.user_name || 'User';
 
   return (
-    <header className="h-20 bg-black/80 backdrop-blur-md border-b border-border px-6 md:px-10 flex items-center justify-between sticky top-0 z-40 transition-colors duration-200">
+    <header className="h-20 bg-bg/80 backdrop-blur-md border-b border-border px-6 md:px-10 flex items-center justify-between sticky top-0 z-40 transition-colors duration-200">
       <div className="flex items-center gap-8 flex-1">
         <div className="flex items-center gap-4 md:hidden">
           <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-black shadow-sm">
@@ -20,7 +20,7 @@ export function Header() {
         </div>
         
         <div className="relative w-full max-w-md hidden sm:block group">
-          <div className="flex items-center px-4 py-2.5 bg-black border border-border rounded-xl focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all shadow-sm">
+          <div className="flex items-center px-4 py-2.5 bg-surface border border-border rounded-xl focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all shadow-sm">
             <Search className="text-text-muted mr-3" size={18} />
             <input 
               type="text" 

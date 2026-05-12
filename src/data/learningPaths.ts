@@ -11,7 +11,8 @@ import {
   Box, 
   Cloud, 
   Server, 
-  Trophy
+  Trophy,
+  type LucideIcon
 } from 'lucide-react';
 
 export interface LearningLevel {
@@ -32,7 +33,7 @@ export interface LearningPath {
   difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
   totalHours: number;
   accentColor: string;
-  icon: any; // Keep any as LucideIcon might have type issues with dynamic mapping
+  icon: LucideIcon; // master type safety
   levels: LearningLevel[];
 }
 

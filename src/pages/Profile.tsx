@@ -141,10 +141,10 @@ export function Profile() {
               </div>
               
               <div className="flex flex-wrap justify-center md:justify-start gap-3">
-                 <div className="px-4 py-2 rounded-xl bg-black/40 backdrop-blur-md border border-primary/10 text-xs font-medium text-text-muted">
+                 <div className="px-4 py-2 rounded-xl bg-surface/40 backdrop-blur-md border border-primary/10 text-xs font-medium text-text-muted">
                     Class: <span className="text-primary font-bold">{data?.persona.title}</span>
                  </div>
-                 <div className="px-4 py-2 rounded-xl bg-black/40 backdrop-blur-md border border-primary/10 text-xs font-medium text-text-muted">
+                 <div className="px-4 py-2 rounded-xl bg-surface/40 backdrop-blur-md border border-primary/10 text-xs font-medium text-text-muted">
                     Integrity: <span className="text-primary font-bold">{data?.persona.level ? data.persona.level * 10 : 0}%</span>
                  </div>
               </div>
@@ -254,7 +254,7 @@ export function Profile() {
         </div>
         
         <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto relative z-10">
-          <button className="px-6 py-3 bg-primary text-white rounded-xl font-medium text-sm hover:bg-primary-hover hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2 justify-center">
+          <button className="px-6 py-3 bg-primary text-bg rounded-xl font-medium text-sm hover:bg-primary-hover hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2 justify-center">
             <Activity size={18} />
             Sync Profile
           </button>

@@ -1,7 +1,8 @@
 import { Hono } from 'hono';
+import { type SupabaseClient } from '@supabase/supabase-js';
 
 const app = new Hono<{ 
-  Variables: { supabaseAdmin: any };
+  Variables: { supabaseAdmin: SupabaseClient };
 }>();
 
 // GET /api/resources — list all curated resources
