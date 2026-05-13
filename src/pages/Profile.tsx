@@ -102,7 +102,7 @@ export function Profile() {
           {/* Cinematic Identity Header */}
       <section className="relative w-full h-[280px] md:h-[350px] rounded-[2rem] overflow-hidden mb-12 group">
         <video 
-          src="https://www.pexels.com/download/video/7986491/" 
+          src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260405_170732_8a9ccda6-5cff-4628-b164-059c500a2b41.mp4" 
           autoPlay 
           loop 
           muted 

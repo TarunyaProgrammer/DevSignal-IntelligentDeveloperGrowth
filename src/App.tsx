@@ -57,7 +57,7 @@ export default function App() {
                   <Route path="/repo/:id" element={<RepoDetail />} />
                   <Route path="/resources" element={<Resources />} />
                   <Route path="/learning-path/:courseId" element={<LearningPathPage />} />
-                  <Route path="/editor" element={<Editor />} />
+                  <Route path="/editor/:id" element={<Editor />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/debug-chart" element={<DebugChartPage />} />
                 </Route>

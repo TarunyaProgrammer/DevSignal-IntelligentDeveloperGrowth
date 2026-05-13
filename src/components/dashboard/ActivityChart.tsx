@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
 interface ActivityChartProps {
@@ -12,10 +13,21 @@ export function ActivityChart({ data }: ActivityChartProps) {
   // data is undefined when still fetching from API
   // data is null when the API returns 202 (Accepted/Computing)
   // data is [] when the API returned no results or is empty
-  const isLoading = data === undefined || data === null;
-  const isEmpty = Array.isArray(data) && data.length === 0;
+  const [isTimedOut, setIsTimedOut] = useState(false);
 
-  if (isLoading) {
+  useEffect(() => {
+    let timeout: ReturnType<typeof setTimeout>;
+    if (data === null) {
+      // If it stays null for 20 seconds, we assume GitHub is stuck
+      timeout = setTimeout(() => setIsTimedOut(true), 20000);
+    } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsTimedOut(false);
+    }
+    return () => clearTimeout(timeout);
+  }, [data]);
+
+  if (data === undefined || (data === null && !isTimedOut)) {
     return (
       <div className="h-56 flex flex-col items-center justify-center text-text-muted space-y-4 rounded-2xl bg-surface-hover/30 border border-border border-dashed">
         <div className="flex gap-2.5">
@@ -35,7 +47,7 @@ export function ActivityChart({ data }: ActivityChartProps) {
     );
   }
 
-  if (isEmpty) {
+  if (!Array.isArray(data) || data.length === 0 || isTimedOut) {
     return (
       <div className="h-56 flex flex-col items-center justify-center text-text-muted space-y-4 rounded-2xl bg-surface-hover/30 border border-border border-dashed group">
         <motion.div 
@@ -86,11 +98,12 @@ export function ActivityChart({ data }: ActivityChartProps) {
         {/* Soft glow behind the chart */}
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
 
-        <svg
-          viewBox={`0 0 ${width} ${height}`}
-          className="w-full h-56"
-          preserveAspectRatio="none"
-        >
+        <div className="relative w-full h-56">
+          <svg
+            viewBox={`0 0 ${width} ${height}`}
+            className="absolute inset-0 w-full h-full"
+            preserveAspectRatio="none"
+          >
           {/* Defs for gradient fill */}
           <defs>
             <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
@@ -129,17 +142,22 @@ export function ActivityChart({ data }: ActivityChartProps) {
             transition={{ duration: 2, ease: "easeOut" }}
           />
 
-          {/* Hover Dots instead of vertical bars */}
+          </svg>
+
+          {/* HTML Hover Dots to maintain perfect circle aspect ratio */}
           {points.map((p, i) => (
-            <circle
+            <div
               key={i}
-              cx={p.x}
-              cy={p.y}
-              r="4"
-              className="fill-surface stroke-primary stroke-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              className="absolute w-[9px] h-[9px] rounded-full bg-surface border-[2px] border-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-[0_0_8px_rgba(212,175,55,0.6)] pointer-events-none"
+              style={{
+                left: `${(p.x / width) * 100}%`,
+                top: `${(p.y / height) * 100}%`,
+                transform: 'translate(-50%, -50%)',
+                zIndex: 20
+              }}
             />
           ))}
-        </svg>
+        </div>
 
         <div className="flex justify-between mt-4 text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-text-muted border-t border-border pt-4">
           <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-border" /> T-12 WEEKS</span>

@@ -69,7 +69,7 @@ export function Dashboard() {
           loop 
           muted 
           playsInline 
-          className="absolute inset-0 w-full h-full object-cover grayscale-[0.3] group-hover:scale-110 transition-transform duration-[3000ms] ease-out"
+          className="absolute inset-0 w-full h-full object-cover grayscale-[0.2] group-hover:scale-105 transition-transform duration-[5000ms]"
         />
         <div className="absolute inset-0 noise-overlay opacity-[0.5] mix-blend-overlay pointer-events-none" />
         <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/60 to-transparent" />

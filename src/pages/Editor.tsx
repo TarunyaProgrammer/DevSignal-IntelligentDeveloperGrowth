@@ -1,222 +1,305 @@
-import { useState } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import MonacoEditor from '@monaco-editor/react';
-import { Code2, Play, Save, ChevronDown, Check, Terminal, X, Zap, Cpu } from 'lucide-react';
-import { executeCode } from '@/lib/execution';
-import { useCreateSnippet } from '@/hooks/queries';
+
+import { useRepo } from '@/hooks/queries';
+import { WebContainerTerminal } from '@/components/terminal/WebContainerTerminal';
+import { sendCommand, webcontainerInstance } from '@/lib/webcontainer';
 import { SEO } from '@/components/layout/SEO';
-import { cn } from '@/lib/utils';
-import { useTheme } from '@/contexts/ThemeContext';
 
-const LANGUAGES = [
-  { id: 'javascript', name: 'JavaScript' },
-  { id: 'typescript', name: 'TypeScript' },
-  { id: 'python', name: 'Python' },
-  { id: 'rust', name: 'Rust' },
-  { id: 'go', name: 'Go' },
-  { id: 'java', name: 'Java' },
-  { id: 'cpp', name: 'C++' },
-  { id: 'csharp', name: 'C#' },
-  { id: 'markdown', name: 'Markdown' }
-];
-
-const DEFAULT_CODE: Record<string, string> = {
-  javascript: "// Logic parsing enabled.\nconsole.log('DevSignal Execution Array initialized...');\n\nconst greet = (name) => `Status: [SUCCESS] for user: ${name}`;\nconsole.log(greet('SYSTEM_USER'));",
-  typescript: "// Type integrity checks active.\nconst status: string = 'Signal Strong';\nconsole.log(`Core integrity: ${status}`);",
-  python: "print('Python interpreter initialized...')",
-  rust: 'fn main() {\n    println!("Rust memory safety verified.");\n}',
-  go: 'package main\n\nimport "fmt"\n\nfunc main() {\n    fmt.Println("Go routines synchronized.")\n}',
-};
+// Sub-components
+import { EditorHeader } from '@/components/editor/EditorHeader';
+import { FileExplorer } from '@/components/editor/FileExplorer';
+import { CodeEditor } from '@/components/editor/CodeEditor';
+import { type FileItem, LANGUAGES } from '@/components/editor/types';
 
 export function Editor() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { data: repo, isLoading } = useRepo(id || '');
+
+  // State Management
+  const [fileTree, setFileTree] = useState<FileItem[]>([]);
+  const [currentFile, setCurrentFile] = useState<FileItem | null>(null);
+  const [code, setCode] = useState<string>('// Select a node to begin intelligence processing');
   const [language, setLanguage] = useState(LANGUAGES[0]);
-  const [code, setCode] = useState(DEFAULT_CODE[LANGUAGES[0].id] || '');
-  const [isOpen, setIsOpen] = useState(false);
-  const { theme } = useTheme();
-  
   const [isExecuting, setIsExecuting] = useState(false);
   const [output, setOutput] = useState<string | null>(null);
-  const saveMutation = useCreateSnippet();
+  const [needsPermission, setNeedsPermission] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
-  const handleLanguageChange = (lang: typeof LANGUAGES[0]) => {
-    setLanguage(lang);
-    setCode(DEFAULT_CODE[lang.id] || '');
-    setIsOpen(false);
-    setOutput(null);
+  // --- Business Logic ---
+
+  const fetchRepoTree = useCallback(async () => {
+    if (!id) return;
+    setIsSyncing(true);
+    try {
+      const response = await fetch(`http://localhost:3001/api/repos/${id}/tree`);
+      const data = await response.json();
+      
+      if (data.tree) {
+        const root: FileItem[] = [];
+        const map: Record<string, FileItem> = {};
+
+        data.tree.forEach((item: { path: string; type: string; sha: string }) => {
+          const parts = item.path.split('/');
+          let currentLevel = root;
+          let currentPath = '';
+
+          parts.forEach((part, index) => {
+            currentPath = currentPath ? `${currentPath}/${part}` : part;
+            const isLast = index === parts.length - 1;
+
+            if (!map[currentPath]) {
+              const newItem: FileItem = {
+                name: part,
+                kind: item.type === 'tree' || (!isLast) ? 'directory' : 'file',
+                path: currentPath,
+                sha: isLast ? item.sha : undefined,
+                children: []
+              };
+              map[currentPath] = newItem;
+              currentLevel.push(newItem);
+            }
+
+            if (map[currentPath].children) {
+              currentLevel = map[currentPath].children!;
+            }
+          });
+        });
+
+        const sortItems = (items: FileItem[]) => {
+          items.sort((a, b) => {
+            if (a.kind === b.kind) return a.name.localeCompare(b.name);
+            return a.kind === 'directory' ? -1 : 1;
+          });
+          items.forEach(item => {
+            if (item.children) sortItems(item.children);
+          });
+        };
+
+        sortItems(root);
+        setFileTree(root);
+      }
+    } catch (err) {
+      console.error('Failed to sync repo tree:', err);
+      setOutput('Failed to synchronize repository tree from cloud.');
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    if (repo) fetchRepoTree();
+  }, [repo, fetchRepoTree]);
+
+  const handleOpenDirectory = async () => {
+    if (!('showDirectoryPicker' in window)) {
+      setOutput('Browser Error: File System Access API is not supported. Use a Chromium browser.');
+      return;
+    }
+    try {
+      // @ts-expect-error - showDirectoryPicker is part of the File System Access API
+      const dirHandle = await window.showDirectoryPicker();
+      const readDir = async (handle: FileSystemDirectoryHandle): Promise<FileItem[]> => {
+        const items: FileItem[] = [];
+        // @ts-expect-error - entries() is part of the File System Access API
+        for await (const entry of handle.entries()) {
+          const [name, entryHandle] = entry as [string, FileSystemFileHandle | FileSystemDirectoryHandle];
+          items.push({ name, kind: entryHandle.kind as 'file' | 'directory', handle: entryHandle });
+        }
+        return items.sort((a, b) => (a.kind === b.kind ? a.name.localeCompare(b.name) : a.kind === 'directory' ? -1 : 1));
+      };
+      setFileTree(await readDir(dirHandle));
+      setNeedsPermission(false);
+    } catch (err) {
+      console.error('Failed to open directory:', err);
+    }
+  };
+
+  const handleFolderToggle = async (item: FileItem) => {
+    if (item.kind !== 'directory') return;
+    if (item.isOpen) {
+      item.isOpen = false;
+      setFileTree([...fileTree]);
+    } else {
+      if (item.handle) {
+        try {
+          const handle = item.handle as FileSystemDirectoryHandle;
+          const readDir = async (h: FileSystemDirectoryHandle): Promise<FileItem[]> => {
+            const items: FileItem[] = [];
+            // @ts-expect-error - entries() is part of the File System Access API
+            for await (const entry of h.entries()) {
+              const [name, entryHandle] = entry as [string, FileSystemFileHandle | FileSystemDirectoryHandle];
+              items.push({ name, kind: entryHandle.kind as 'file' | 'directory', handle: entryHandle });
+            }
+            return items.sort((a, b) => (a.kind === b.kind ? a.name.localeCompare(b.name) : a.kind === 'directory' ? -1 : 1));
+          };
+          item.children = await readDir(handle);
+          item.isOpen = true;
+          setFileTree([...fileTree]);
+        } catch (err: unknown) {
+          if ((err as Error).name === 'NotAllowedError') setNeedsPermission(true);
+        }
+      } else {
+        item.isOpen = true;
+        setFileTree([...fileTree]);
+      }
+    }
+  };
+
+  const handleFileClick = async (item: FileItem) => {
+    try {
+      let content = '';
+      if (item.handle) {
+        const file = await (item.handle as FileSystemFileHandle).getFile();
+        content = await file.text();
+      } else if (item.sha) {
+        const response = await fetch(`http://localhost:3001/api/repos/${id}/blob/${item.sha}`);
+        const data = await response.json();
+        content = data.content || '';
+      }
+
+      setCode(content);
+      setCurrentFile(item);
+
+      const ext = item.name.split('.').pop()?.toLowerCase();
+      const lang = LANGUAGES.find((l: { id: string }) => {
+        if (ext === 'ts' || ext === 'tsx') return l.id === 'typescript';
+        if (ext === 'js' || ext === 'jsx') return l.id === 'javascript';
+        return l.id === ext;
+      }) || LANGUAGES[1];
+      setLanguage(lang);
+
+      if (webcontainerInstance && item.path) {
+        const pathParts = item.path.split('/');
+        let currentDir = '';
+        for (let i = 0; i < pathParts.length - 1; i++) {
+          currentDir += (i === 0 ? '' : '/') + pathParts[i];
+          try { await webcontainerInstance.fs.mkdir(currentDir, { recursive: true }); } catch { /* ignore */ }
+        }
+        await webcontainerInstance.fs.writeFile(item.path, content);
+      }
+    } catch (err) {
+      console.error('Failed to open file:', err);
+      setOutput('Failed to read node contents.');
+    }
+  };
+
+  const handleSave = async () => {
+    if (!currentFile) return;
+    try {
+      if (currentFile.handle && currentFile.kind === 'file') {
+        const writable = await (currentFile.handle as FileSystemFileHandle).createWritable();
+        await writable.write(code);
+        await writable.close();
+      } else if (webcontainerInstance && currentFile.path) {
+        await webcontainerInstance.fs.writeFile(currentFile.path, code);
+      }
+      setOutput('Intelligence node updated successfully.');
+      setTimeout(() => setOutput(null), 3000);
+    } catch (err) {
+      console.error('Failed to save file:', err);
+    }
   };
 
   const handleRun = async () => {
     setIsExecuting(true);
-    await new Promise(r => setTimeout(r, 400));
-    const result = await executeCode(code, language.id);
-    setOutput(result);
-    setIsExecuting(false);
+    try {
+      sendCommand('npm run dev || node index.js');
+    } catch (err: unknown) {
+      setOutput(`Execution failed: ${(err as Error).message}`);
+    } finally {
+      setIsExecuting(false);
+    }
   };
 
-  const editorTheme = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches) 
-    ? 'vs-dark' 
-    : 'vs';
+  const onRequestPermission = async () => {
+    if (fileTree.length > 0 && fileTree[0].handle) {
+      // @ts-expect-error - requestPermission is part of the File System Access API
+      const status = await fileTree[0].handle.requestPermission({ mode: 'readwrite' });
+      if (status === 'granted') setNeedsPermission(false);
+    }
+  };
+
+  // --- Rendering ---
+
+  if (isLoading || !repo) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-background">
+        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-12 h-12 border-2 border-primary/20 border-t-primary rounded-full shadow-[0_0_30px_-5px_rgba(212,175,55,0.3)]"
+        />
+      </div>
+    );
+  }
 
   return (
-    <div className="relative h-[calc(100vh-10rem)] flex flex-col gap-6">
-      <SEO title="Logic Editor" description="Code execution and logic testing environment." />
+    <div className="h-screen flex flex-col bg-background text-text overflow-hidden relative">
+      <SEO title={`Editor | ${repo.name}`} />
       
-      {/* Editor Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-border pb-6 shrink-0">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shadow-inner">
-            <Code2 size={24} strokeWidth={2} />
+      {/* Cinematic Background Gradient */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[150px] opacity-40" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[150px] opacity-20" />
+      </div>
+
+      <EditorHeader 
+        repoName={repo.name} 
+        repoId={id || ''} 
+        onBack={() => navigate(-1)} 
+        isSyncing={isSyncing}
+      />
+
+      <div className="flex-1 flex min-h-0 p-6 gap-6 relative z-10">
+        <FileExplorer 
+          fileTree={fileTree}
+          currentFile={currentFile}
+          onFileClick={handleFileClick}
+          onFolderToggle={handleFolderToggle}
+          onOpenDirectory={handleOpenDirectory}
+          needsPermission={needsPermission}
+          onRequestPermission={onRequestPermission}
+          isSyncing={isSyncing}
+        />
+
+        <div className="flex-1 flex flex-col gap-4 min-h-0">
+          <CodeEditor 
+            currentFile={currentFile}
+            code={code}
+            setCode={setCode}
+            language={language}
+            setLanguage={setLanguage}
+            onSave={handleSave}
+            onRun={handleRun}
+            isExecuting={isExecuting}
+          />
+
+          <div className="flex-1 min-h-0">
+            <WebContainerTerminal />
           </div>
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 text-xs font-semibold text-text-muted uppercase tracking-wider">
-              <span className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(222,219,200,0.5)] animate-pulse" />
-              Execution Core v2.0
+        </div>
+      </div>
+
+      {/* Footer Output */}
+      <AnimatePresence>
+        {output && (
+          <motion.div initial={{ height: 0, opacity: 0, y: 20 }} animate={{ height: 'auto', opacity: 1, y: 0 }} exit={{ height: 0, opacity: 0, y: 20 }}
+            className="bg-black/80 backdrop-blur-2xl border border-white/5 rounded-2xl overflow-hidden fixed bottom-8 right-8 z-50 w-80 shadow-2xl"
+          >
+            <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 bg-white/[0.02]">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Notification Pulse</span>
+              <button onClick={() => setOutput(null)} className="text-white/40 hover:text-white transition-colors">
+                <X size={14} />
+              </button>
             </div>
-            <h2 className="text-3xl font-semibold tracking-tight text-text leading-none">Logic <span className="text-primary">Processor</span></h2>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Language Selector */}
-          <div className="relative z-50">
-            <button 
-              onClick={() => setIsOpen(!isOpen)}
-              className="px-6 py-3 rounded-xl bg-surface border border-border text-text text-sm font-medium hover:bg-surface-hover hover:border-primary/30 transition-all flex items-center gap-3 min-w-[160px] justify-between shadow-sm"
-            >
-              <span>{language.name}</span>
-              <ChevronDown size={16} className={cn("transition-transform duration-300", isOpen && 'rotate-180 text-primary')} />
-            </button>
-
-            <AnimatePresence>
-              {isOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute right-0 mt-2 w-full min-w-[160px] max-h-[300px] overflow-y-auto glass-panel border border-border rounded-xl shadow-xl z-50 p-1.5 no-scrollbar"
-                  >
-                  {LANGUAGES.map((lang) => (
-                    <button
-                      key={lang.id}
-                      onClick={() => handleLanguageChange(lang)}
-                      className={cn(
-                        "w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-all text-sm font-medium",
-                        language.id === lang.id 
-                          ? "bg-primary/10 text-primary" 
-                          : "text-text-muted hover:bg-surface-hover hover:text-text"
-                      )}
-                    >
-                      <span>{lang.name}</span>
-                      {language.id === lang.id && <Check size={16} strokeWidth={2.5} />}
-                    </button>
-                  ))}
-                </motion.div>
-                </>
-              )}
-            </AnimatePresence>
-          </div>
-
-          <button 
-            onClick={handleRun}
-            disabled={isExecuting}
-            className={cn(
-              "flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all shadow-md",
-              isExecuting 
-                ? "bg-surface border border-border text-text-muted opacity-70 cursor-not-allowed" 
-                : "bg-primary text-black hover:bg-primary-hover hover:shadow-lg hover:-translate-y-0.5"
-            )}
-          >
-            {isExecuting ? <Cpu size={16} className="animate-spin" /> : <Play size={16} className="fill-current" strokeWidth={2} />}
-            {isExecuting ? 'Processing' : 'Execute'}
-          </button>
-          
-          <button 
-            onClick={() => saveMutation.mutate({ title: `${language.name} Block`, code, language: language.id })}
-            disabled={saveMutation.isPending}
-            className="w-[46px] h-[46px] rounded-xl bg-surface border border-border text-text flex items-center justify-center hover:bg-surface-hover hover:border-primary/30 transition-all shadow-sm"
-            title="Save Snippet"
-          >
-            <Save size={18} />
-          </button>
-        </div>
-      </div>
-
-      {/* Monaco Container */}
-      <div className="flex-1 min-h-0 flex flex-col relative z-10">
-        <div className="glass-panel flex-1 min-h-0 overflow-hidden flex flex-col p-1.5 rounded-3xl shadow-lg border border-border">
-          <div className="flex-1 min-h-0 rounded-2xl overflow-hidden relative">
-            <MonacoEditor
-              height="100%"
-              language={language.id}
-              theme={editorTheme}
-              value={code}
-              onChange={(value) => setCode(value || '')}
-              options={{
-                fontSize: 14,
-                fontFamily: "'Fira Code', 'Inter', monospace",
-                minimap: { enabled: false },
-                padding: { top: 24, bottom: 24 },
-                scrollBeyondLastLine: false,
-                lineNumbersMinChars: 3,
-                automaticLayout: true,
-                smoothScrolling: true,
-                cursorBlinking: "smooth",
-                renderLineHighlight: "all",
-              }}
-              loading={
-                <div className="w-full h-full flex items-center justify-center bg-bg/50 backdrop-blur-sm">
-                  <div className="flex flex-col items-center gap-4">
-                    <motion.div 
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                      className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full"
-                    />
-                    <p className="text-sm font-medium text-text-muted">Initializing Editor Environment...</p>
-                  </div>
-                </div>
-              }
-            />
-          </div>
-
-          {/* Output Panel */}
-          <AnimatePresence>
-            {output && (
-              <motion.div 
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', minHeight: '160px', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="relative z-20 bg-surface border-t border-border mt-1.5 rounded-2xl flex flex-col overflow-hidden"
-              >
-                <div className="flex items-center justify-between px-6 py-3 bg-surface-hover/50 border-b border-border">
-                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-text">
-                    <Terminal size={14} className="text-primary" /> 
-                    Execution Log
-                  </div>
-                  <button 
-                    onClick={() => setOutput(null)}
-                    className="w-7 h-7 rounded-lg hover:bg-surface flex items-center justify-center text-text-muted hover:text-text transition-colors"
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
-                <div className="flex-1 p-6 font-mono text-sm overflow-y-auto max-h-[250px] bg-bg/50">
-                  <pre className="text-text font-medium leading-relaxed whitespace-pre-wrap">{output}</pre>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
-
-      {/* Footer Info */}
-      <div className="flex items-center gap-2 text-xs font-medium text-text-muted shrink-0 pb-4 md:pb-0">
-        <Zap size={14} className="text-primary" />
-        <span>Status: System synchronized. Logic environment active.</span>
-      </div>
+            <pre className="p-4 font-mono text-[10px] text-text-muted overflow-y-auto max-h-[120px] whitespace-pre-wrap leading-relaxed">
+              {output}
+            </pre>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,8 +1,7 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
-  ArrowLeft, 
-  ExternalLink,
+  ArrowLeft,
   GitPullRequest, AlertCircle,
   Terminal, Star, Zap
 } from 'lucide-react';
@@ -115,16 +114,14 @@ export function RepoDetail() {
             Return to Matrix
           </button>
 
-          <motion.a 
+          <motion.button 
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            href={repo.url} 
-            target="_blank" 
-            rel="noopener noreferrer"
+            onClick={() => navigate(`/editor/${id}`)}
             className="px-8 py-3.5 rounded-2xl bg-primary text-black text-xs font-bold uppercase tracking-[0.2em] hover:shadow-xl hover:shadow-primary/20 transition-all flex items-center gap-4"
           >
-            Terminal View <ExternalLink size={18} />
-          </motion.a>
+            Open in Editor <Terminal size={18} />
+          </motion.button>
         </div>
 
         {/* Cinematic Header */}
