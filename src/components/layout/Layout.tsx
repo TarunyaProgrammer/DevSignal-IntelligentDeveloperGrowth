@@ -1,9 +1,12 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { Header } from './Header';
 import { BottomNav } from './BottomNav';
 import { Footer } from './Footer';
 
 export function Layout() {
+  const location = useLocation();
+  const isOraPage = location.pathname === '/ora';
+
   return (
     <div className="relative min-h-screen bg-bg text-text font-sans overflow-x-hidden">
       
@@ -16,7 +19,7 @@ export function Layout() {
           </div>
         </main>
 
-        <Footer />
+        {!isOraPage && <Footer />}
         
         <BottomNav />
       </div>
