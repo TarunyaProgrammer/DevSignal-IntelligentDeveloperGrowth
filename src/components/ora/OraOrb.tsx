@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { useOra } from '@/contexts/OraContext';
+import { useOra } from '@/hooks/useOra';
 import { useAuth } from '@/contexts/AuthContext';
 import { Sparkles } from 'lucide-react';
 import { OraChatPanel } from './OraChatPanel';

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useState, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { fetchOraGreeting, fetchOraChat } from '@/lib/ora-api';
 import type { OraMessage } from '@/lib/ora-api';
@@ -17,7 +17,8 @@ interface OraContextType {
   clearHistory: () => void;
 }
 
-const OraContext = createContext<OraContextType | undefined>(undefined);
+// eslint-disable-next-line react-refresh/only-export-components
+export const OraContext = createContext<OraContextType | undefined>(undefined);
 
 export function OraProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
@@ -31,6 +32,7 @@ export function OraProvider({ children }: { children: ReactNode }) {
   // Load profile context
   useEffect(() => {
     if (!user) return;
+    let mounted = true;
     const fetchProfile = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -40,13 +42,17 @@ export function OraProvider({ children }: { children: ReactNode }) {
         });
         if (res.ok) {
           const data = await res.json();
-          setProfileContext(data);
+          if (mounted) setProfileContext(data);
+        } else {
+          if (mounted) setProfileContext({ _failed: true });
         }
       } catch (err) {
         console.error("Failed to load profile context for Ora", err);
+        if (mounted) setProfileContext({ _failed: true });
       }
     };
     fetchProfile();
+    return () => { mounted = false; };
   }, [user]);
 
   // Load history from localStorage
@@ -68,6 +74,12 @@ export function OraProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(`ora_history_${user.id}`, JSON.stringify(messages));
   }, [messages, user]);
 
+  // Keep a ref to the latest messages to avoid stale closures during streaming
+  const messagesRef = useRef<OraMessage[]>([]);
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
   // Fetch initial greeting
   useEffect(() => {
     if (!user || greeting) return;
@@ -80,10 +92,11 @@ export function OraProvider({ children }: { children: ReactNode }) {
         setGreeting("Hello! I'm Ora. What can I help you with today?");
       }
     };
+    // Only fetch if profileContext has loaded (either successfully or failed)
     if (Object.keys(profileContext).length > 0) {
       loadGreeting();
     }
-  }, [user, profileContext]); // Simplified back to stable dependencies to avoid HMR crashes
+  }, [user, profileContext]); // Added pageContext intentionally excluded as we don't want to re-greet on page change here
 
   const sendMessage = async (text: string) => {
     if (!text.trim()) return;
@@ -95,11 +108,14 @@ export function OraProvider({ children }: { children: ReactNode }) {
       timestamp: new Date().toISOString()
     };
 
-    setMessages(prev => [...prev, userMsg]);
+    const currentMessages = messagesRef.current;
+    const newMessages = [...currentMessages, userMsg];
+    
+    setMessages(newMessages);
     setIsStreaming(true);
 
     try {
-      const data = await fetchOraChat([...messages, userMsg], pageContext, profileContext);
+      const data = await fetchOraChat(newMessages, pageContext, profileContext);
       
       const oraMsg: OraMessage = {
         id: crypto.randomUUID(),
@@ -147,11 +163,3 @@ export function OraProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
-export function useOra() {
-  const context = useContext(OraContext);
-  if (context === undefined) {
-    throw new Error('useOra must be used within an OraProvider');
-  }
-  return context;
-}

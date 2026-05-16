@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Layout, GitFork, ArrowRight, Bot, Star, Sparkles, Command } from 'lucide-react';
-import { useOra } from '@/contexts/OraContext';
+import { useOra } from '@/hooks/useOra';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
@@ -23,8 +23,10 @@ export function OraPage() {
   }, [setPageContext]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, greeting]);
+    if (messages.length > 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,58 +126,68 @@ export function OraPage() {
               <span className="text-primary font-serif italic">{user?.user_metadata?.full_name?.split(' ')[0] || user?.user_metadata?.user_name || 'Architect'}</span>
             </motion.h1>
 
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.8, duration: 1 }}
-              className="max-w-2xl mx-auto"
-            >
-              <div className="text-xl md:text-2xl text-white/60 font-medium leading-relaxed min-h-[120px] px-6">
-                {greeting ? (
-                  <div className="prose prose-invert prose-lg max-w-none">
-                    <ReactMarkdown>{greeting}</ReactMarkdown>
+            <AnimatePresence>
+              {messages.length === 0 && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                  transition={{ delay: 0.8, duration: 1 }}
+                  className="max-w-2xl mx-auto"
+                >
+                  <div className="text-xl md:text-2xl text-white/60 font-medium leading-relaxed min-h-[120px] px-6">
+                    {greeting ? (
+                      <div className="prose prose-invert prose-lg max-w-none text-center">
+                        <ReactMarkdown>{greeting}</ReactMarkdown>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center space-y-4 pt-4">
+                        <div className="flex gap-2">
+                          {[0, 1, 2].map((i) => (
+                            <div key={i} className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: `${i * 150}ms` }}/>
+                          ))}
+                        </div>
+                        <span className="text-sm uppercase tracking-[0.2em] opacity-40 font-bold">Parsing user velocity...</span>
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <div className="flex flex-col items-center space-y-4 pt-4">
-                    <div className="flex gap-2">
-                      {[0, 1, 2].map((i) => (
-                        <div key={i} className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: `${i * 150}ms` }}/>
-                      ))}
-                    </div>
-                    <span className="text-sm uppercase tracking-[0.2em] opacity-40 font-bold">Parsing user velocity...</span>
-                  </div>
-                )}
-              </div>
-            </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
 
         {/* Cinematic Quick Actions */}
-        <motion.div 
-          initial={{ y: 40, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 1, duration: 0.8, ease: SMOOTH_EASE }}
-          className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full mb-32"
-        >
-          <ActionButton 
-            icon={Layout} 
-            label="Command Center" 
-            sub="View Dashboard" 
-            onClick={() => navigate('/dashboard')} 
-          />
-          <ActionButton 
-            icon={Star} 
-            label="Mastery Paths" 
-            sub="Continue Learning" 
-            onClick={() => navigate('/resources')} 
-          />
-          <ActionButton 
-            icon={GitFork} 
-            label="Logic Matrix" 
-            sub="Deep Analytics" 
-            onClick={() => navigate('/analytics')} 
-          />
-        </motion.div>
+        <AnimatePresence>
+          {messages.length === 0 && (
+            <motion.div 
+              initial={{ y: 40, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 20, opacity: 0, height: 0, overflow: 'hidden' }}
+              transition={{ delay: 1, duration: 0.8, ease: SMOOTH_EASE }}
+              className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full mb-32"
+            >
+              <ActionButton 
+                icon={Layout} 
+                label="Command Center" 
+                sub="View Dashboard" 
+                onClick={() => navigate('/dashboard')} 
+              />
+              <ActionButton 
+                icon={Star} 
+                label="Mastery Paths" 
+                sub="Continue Learning" 
+                onClick={() => navigate('/resources')} 
+              />
+              <ActionButton 
+                icon={GitFork} 
+                label="Logic Matrix" 
+                sub="Deep Analytics" 
+                onClick={() => navigate('/analytics')} 
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Premium Chat Thread */}
         <div className="w-full space-y-12 mb-40">

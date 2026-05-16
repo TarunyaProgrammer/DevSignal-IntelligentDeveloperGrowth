@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useOra } from '@/contexts/OraContext';
+import { useOra } from '@/hooks/useOra';
 import { Send, X, Trash2, Sparkles, Zap, Maximize2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { cn } from '@/lib/utils';
