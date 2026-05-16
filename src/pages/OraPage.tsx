@@ -43,6 +43,7 @@ export function OraPage() {
       <div className="fixed inset-0 z-0">
         <video 
           src="/OraBg.mp4" 
+          poster="/OraBgPreView.png" 
           autoPlay 
           loop 
           muted 
