@@ -83,7 +83,7 @@ export function OraProvider({ children }: { children: ReactNode }) {
     if (Object.keys(profileContext).length > 0) {
       loadGreeting();
     }
-  }, [user, pageContext, profileContext, greeting]);
+  }, [user, profileContext]); // Simplified back to stable dependencies to avoid HMR crashes
 
   const sendMessage = async (text: string) => {
     if (!text.trim()) return;
