@@ -208,9 +208,9 @@ export function OraPage() {
                 )}>
                   <div className="flex items-center gap-3 mb-3 opacity-40 text-[10px] font-bold uppercase tracking-widest">
                     {msg.role === 'user' ? (
-                      <><Command size={12} /> User Node</>
+                      <><Command size={12} /> {user?.user_metadata?.full_name || 'User'}</>
                     ) : (
-                      <><Bot size={12} /> Intelligence Node</>
+                      <><Bot size={12} /> Ora</>
                     )}
                   </div>
                   <div className={cn("text-lg leading-relaxed prose prose-lg max-w-none", msg.role === 'user' ? 'prose-black' : 'prose-invert')}>
