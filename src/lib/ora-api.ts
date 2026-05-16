@@ -30,7 +30,11 @@ export const fetchOraGreeting = async (pageContext: Record<string, unknown>, pro
   
   if (!res.ok) {
     const errData = await res.json().catch(() => ({}));
-    throw new Error(errData.error || 'Failed to fetch greeting');
+    const errorMsg = errData.error || 'Failed to fetch greeting';
+    if (res.status === 429 || errorMsg.includes('429') || errorMsg.toLowerCase().includes('quota')) {
+      throw new Error('RATE_LIMIT');
+    }
+    throw new Error(errorMsg);
   }
   return res.json();
 };
@@ -45,7 +49,11 @@ export const fetchOraChat = async (messages: OraMessage[], pageContext: Record<s
 
   if (!res.ok) {
     const errData = await res.json().catch(() => ({}));
-    throw new Error(errData.error || 'Failed to fetch chat response');
+    const errorMsg = errData.error || 'Failed to fetch chat response';
+    if (res.status === 429 || errorMsg.includes('429') || errorMsg.toLowerCase().includes('quota')) {
+      throw new Error('RATE_LIMIT');
+    }
+    throw new Error(errorMsg);
   }
   return res.json();
 };
