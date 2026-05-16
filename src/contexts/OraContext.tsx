@@ -1,11 +1,11 @@
 import { createContext, useState, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
-import { fetchOraGreeting, fetchOraChat } from '@/lib/ora-api';
+import { fetchOraChat } from '@/lib/ora-api';
 import type { OraMessage } from '@/lib/ora-api';
 import { useAuth } from './AuthContext';
 import { supabase } from '@/lib/supabase';
 import { AnimatePresence, motion } from 'framer-motion';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
 
 interface OraContextType {
   messages: OraMessage[];
@@ -31,10 +31,17 @@ export function OraProvider({ children }: { children: ReactNode }) {
   const [pageContext, setPageContext] = useState<Record<string, unknown>>({});
   const [profileContext, setProfileContext] = useState<Record<string, unknown>>({});
   const [rateLimitError, setRateLimitError] = useState(false);
+  const [aiReadyNotification, setAiReadyNotification] = useState(false);
 
   const triggerRateLimit = () => {
     setRateLimitError(true);
     setTimeout(() => setRateLimitError(false), 5000);
+    
+    // Notify user when 60s cooldown is expected to be over
+    setTimeout(() => {
+      setAiReadyNotification(true);
+      setTimeout(() => setAiReadyNotification(false), 5000);
+    }, 60000);
   };
 
   // Load profile context
@@ -91,24 +98,19 @@ export function OraProvider({ children }: { children: ReactNode }) {
   // Fetch initial greeting
   useEffect(() => {
     if (!user || greeting) return;
-    const loadGreeting = async () => {
-      try {
-        const data = await fetchOraGreeting(pageContext, profileContext);
-        setGreeting(data.text);
-      } catch (error: unknown) {
-        if (error instanceof Error && error.message === 'RATE_LIMIT') {
-          triggerRateLimit();
-        } else {
-          console.error("Failed to fetch greeting", error);
-        }
-        setGreeting("Hello! I'm Ora. What can I help you with today?");
-      }
-    };
-    // Only fetch if profileContext has loaded (either successfully or failed)
-    if (Object.keys(profileContext).length > 0) {
-      loadGreeting();
-    }
-  }, [user, profileContext]); // Added pageContext intentionally excluded as we don't want to re-greet on page change here
+    
+    const greetings = [
+      "Hello! I'm Ora. What can I help you with today?",
+      "Hey there! Ready to write some code?",
+      "Welcome back! Let's build something awesome.",
+      "Ora online. How can I assist your development today?",
+      "Hi! I'm Ora, your developer intelligence node. What's on the agenda?"
+    ];
+
+    const randomGreeting = greetings[Math.floor(Math.random() * greetings.length)];
+    setGreeting(randomGreeting);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const sendMessage = async (text: string) => {
     if (!text.trim()) return;
@@ -193,6 +195,24 @@ export function OraProvider({ children }: { children: ReactNode }) {
             <div className="flex flex-col">
               <span className="text-sm font-semibold text-text">Rate Limit Exceeded</span>
               <span className="text-xs text-text-muted">Please wait ~60s before trying again.</span>
+            </div>
+          </motion.div>
+        )}
+        
+        {/* Global AI Ready Toast */}
+        {aiReadyNotification && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, x: '-50%' }}
+            animate={{ opacity: 1, y: 0, x: '-50%' }}
+            exit={{ opacity: 0, y: 20, x: '-50%' }}
+            className="fixed bottom-6 left-1/2 z-[100] flex items-center gap-3 px-5 py-3 rounded-2xl glass-panel border border-emerald-500/20 bg-emerald-500/10 shadow-2xl backdrop-blur-md"
+          >
+            <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+              <CheckCircle2 size={18} className="text-emerald-500" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold text-text">AI Systems Ready</span>
+              <span className="text-xs text-text-muted">Ora's limit cooldown has completed!</span>
             </div>
           </motion.div>
         )}

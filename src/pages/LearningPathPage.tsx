@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LEARNING_PATHS } from '../data/learningPaths';
+import { useOra } from '@/hooks/useOra';
 import { cn } from '@/lib/utils';
 import { SEO } from '@/components/layout/SEO';
 
@@ -46,6 +47,25 @@ export function LearningPathPage() {
       }
     }
   }, [path]);
+
+  const { setPageContext } = useOra();
+
+  useEffect(() => {
+    if (path) {
+      setPageContext({
+        page: 'Learning Path Sector',
+        courseId: path.id,
+        courseTitle: path.title,
+        description: path.tagline,
+        totalHours: path.totalHours,
+        modules: path.levels.map(l => l.title).join(', ')
+      });
+    }
+    return () => {
+      // Clear context when leaving the page
+      setPageContext({});
+    };
+  }, [path, setPageContext]);
 
   if (!path) {
     return (

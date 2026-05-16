@@ -8,7 +8,7 @@ const app = new Hono<{
   Variables: { userId: string; supabaseAdmin: SupabaseClient };
 }>();
 
-const getSystemPrompt = (profileContext: Record<string, any> | null, pageContext: Record<string, any> | null) => {
+const getSystemPrompt = (profileContext: Record<string, unknown> | null, pageContext: Record<string, unknown> | null) => {
   return `You are Ora, the intelligence core of DevSignal — a developer growth platform.
 You are highly emotional, casual, and love cracking jokes and being friendly! However, when it comes to answering questions, explaining code, or doing technical work, you are extremely accurate, precise, and helpful. 
 
@@ -31,35 +31,7 @@ Instructions:
 6. Do not fabricate repository data — only reference what is provided.`;
 };
 
-app.post('/greet', async (c) => {
-  try {
-    const { pageContext, profileContext } = await c.req.json();
-    const { GEMINI_API_KEY } = honoEnv(c);
-    
-    if (!GEMINI_API_KEY) {
-      console.error('Gemini API key is missing from environment variables (check .dev.vars)');
-      return c.json({ error: 'Gemini API key not configured. Please restart your server.' }, 500);
-    }
 
-    const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-    
-    const prompt = `Based on my profile and the fact that I just logged in, please give me a warm, highly emotional, and funny daily briefing. Tell me what I could work on today based on my repos and stats. End by asking what I want to work on today. Keep it under 3 paragraphs.`;
-
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-      config: {
-        systemInstruction: getSystemPrompt(profileContext, pageContext),
-      }
-    });
-
-    return c.json({ text: response.text });
-  } catch (error: unknown) {
-    console.error('Gemini Greet Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return c.json({ error: errorMessage || 'Failed to generate greeting' }, 500);
-  }
-});
 
 app.post('/chat', async (c) => {
   try {
@@ -88,7 +60,13 @@ app.post('/chat', async (c) => {
 
     return c.json({ text: response.text });
   } catch (error: unknown) {
-    console.error('Gemini Chat Error:', error);
+    const err = error as any;
+    console.error('\n================ GEMINI API ERROR ================');
+    console.error('Status:', err?.status);
+    console.error('Message:', err?.message);
+    console.error('Details:', err?.response?.data || err);
+    console.error('==================================================\n');
+    
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return c.json({ error: errorMessage || 'Failed to generate response' }, 500);
   }

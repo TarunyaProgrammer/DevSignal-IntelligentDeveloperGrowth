@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { CourseCard } from '../components/CourseCard';
 import { LEARNING_PATHS } from '../data/learningPaths';
 import { SEO } from '@/components/layout/SEO';
+import { useOra } from '@/hooks/useOra';
 import { cn } from '@/lib/utils';
 
 const SMOOTH_EASE = [0.16, 1, 0.3, 1] as const;
@@ -11,6 +12,7 @@ const SMOOTH_EASE = [0.16, 1, 0.3, 1] as const;
 export function Resources() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const { setPageContext } = useOra();
 
   const CATEGORIES = useMemo(() => {
     const unique = Array.from(new Set(LEARNING_PATHS.map((p) => p.category))).sort();
@@ -59,6 +61,16 @@ export function Resources() {
       window.removeEventListener('focus', updateProgress);
     };
   }, []);
+
+  useEffect(() => {
+    setPageContext({
+      page: 'Mastery Paths (Resources)',
+      searchQuery: searchTerm,
+      selectedCategory,
+      totalPaths: LEARNING_PATHS.length
+    });
+    return () => setPageContext({});
+  }, [searchTerm, selectedCategory, setPageContext]);
 
   const filteredPaths = LEARNING_PATHS.filter(path => {
     const matchesSearch = path.title.toLowerCase().includes(searchTerm.toLowerCase()) || 

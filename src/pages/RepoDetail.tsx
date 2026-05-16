@@ -11,6 +11,8 @@ import { cn } from '@/lib/utils';
 import { SEO } from '@/components/layout/SEO';
 import { ContributorGrid } from '@/components/dashboard/ContributorGrid';
 import { LanguageStats } from '@/components/dashboard/LanguageStats';
+import { useOra } from '@/hooks/useOra';
+import { useEffect } from 'react';
 
 const SMOOTH_EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -53,6 +55,20 @@ export function RepoDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data: repo, isLoading, error } = useRepo(id || '');
+  const { setPageContext } = useOra();
+
+  useEffect(() => {
+    setPageContext({
+      page: 'Repository Detail (Node Intelligence)',
+      repoName: repo?.name,
+      description: repo?.description,
+      language: repo?.language,
+      stars: repo?.stars,
+      forks: repo?.forks,
+      issues: repo?.open_issues
+    });
+    return () => setPageContext({});
+  }, [repo, setPageContext]);
 
   if (isLoading) {
     return (

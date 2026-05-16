@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Layout, Star, GitFork, Zap, RefreshCcw, AlertCircle, Database } from 'lucide-react';
 import { StatsCard } from '@/components/dashboard/StatsCard';
@@ -8,6 +8,7 @@ import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
 import { useRepos, useAnalytics, useSync } from '@/hooks/queries';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSearch } from '@/contexts/SearchContext';
+import { useOra } from '@/hooks/useOra';
 import { cn } from '@/lib/utils';
 import { SEO } from '@/components/layout/SEO';
 
@@ -20,8 +21,20 @@ export function Dashboard() {
   const { user } = useAuth();
   const { searchQuery } = useSearch();
   const [visibleRepos, setVisibleRepos] = useState(6);
+  const { setPageContext } = useOra();
 
   const isLoading = reposLoading || analyticsLoading;
+
+  useEffect(() => {
+    setPageContext({
+      page: 'Dashboard',
+      reposCount: repos?.length || 0,
+      totalStars: analytics?.total_stars || 0,
+      totalForks: analytics?.total_forks || 0,
+      searchQuery
+    });
+    return () => setPageContext({});
+  }, [repos, analytics, searchQuery, setPageContext]);
 
   const handleSync = () => {
     const username = user?.user_metadata?.user_name;

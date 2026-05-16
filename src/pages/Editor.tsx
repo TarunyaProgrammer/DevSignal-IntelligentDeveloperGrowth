@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { useRepo } from '@/hooks/queries';
+import { useOra } from '@/hooks/useOra';
 import { WebContainerTerminal } from '@/components/terminal/WebContainerTerminal';
 import { sendCommand, webcontainerInstance } from '@/lib/webcontainer';
 import { SEO } from '@/components/layout/SEO';
@@ -28,6 +29,7 @@ export function Editor() {
   const [output, setOutput] = useState<string | null>(null);
   const [needsPermission, setNeedsPermission] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const { setPageContext } = useOra();
 
   // --- Business Logic ---
 
@@ -93,6 +95,16 @@ export function Editor() {
   useEffect(() => {
     if (repo) fetchRepoTree();
   }, [repo, fetchRepoTree]);
+
+  useEffect(() => {
+    setPageContext({
+      page: 'Code Editor',
+      repoName: repo?.name,
+      currentFile: currentFile?.name,
+      currentFilePath: currentFile?.path
+    });
+    return () => setPageContext({});
+  }, [repo, currentFile, setPageContext]);
 
   const handleOpenDirectory = async () => {
     if (!('showDirectoryPicker' in window)) {

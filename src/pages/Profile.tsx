@@ -15,6 +15,7 @@ import {
   LogOut
 } from 'lucide-react';
 import { SEO } from '@/components/layout/SEO';
+import { useOra } from '@/hooks/useOra';
 
 interface ProfileData {
   stats: {
@@ -37,6 +38,7 @@ export function Profile() {
   const { user, logout } = useAuth();
   const [data, setData] = useState<ProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { setPageContext } = useOra();
 
   useEffect(() => {
     async function fetchProfile() {
@@ -57,6 +59,19 @@ export function Profile() {
     }
     fetchProfile();
   }, []);
+
+  useEffect(() => {
+    setPageContext({
+      page: 'Identity Archive (Profile)',
+      persona: data?.persona?.title,
+      level: data?.persona?.level,
+      totalStars: data?.stats?.totalStars,
+      totalForks: data?.stats?.totalForks,
+      rhythm: data?.rhythm?.type,
+      topLanguages: Object.keys(data?.stats?.languages || {}).slice(0, 3).join(', ')
+    });
+    return () => setPageContext({});
+  }, [data, setPageContext]);
 
   if (isLoading) {
     return (

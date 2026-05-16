@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, Brain, Shield, Rocket, BarChart2 } from 'lucide-react';
 import { useAnalytics } from '@/hooks/queries';
 import { SEO } from '@/components/layout/SEO';
+import { useOra } from '@/hooks/useOra';
 
 
 // Memoize random data outside the component
@@ -13,7 +14,19 @@ const HEATMAP_DATA = Array.from({ length: 168 }).map(() => ({
 
 export function Analytics() {
   const { data: analytics } = useAnalytics();
-  const languages = analytics?.languages || [];
+  const languages = useMemo(() => analytics?.languages || [], [analytics?.languages]);
+  const { setPageContext } = useOra();
+
+  useEffect(() => {
+    setPageContext({
+      page: 'Technical Evolution (Analytics)',
+      totalRepos: analytics?.total_repos,
+      totalStars: analytics?.total_stars,
+      totalIssues: analytics?.total_issues,
+      topLanguages: languages.slice(0, 3).map(l => `${l.name} (${l.percentage}%)`).join(', ')
+    });
+    return () => setPageContext({});
+  }, [analytics, languages, setPageContext]);
 
   return (
     <div className="relative min-h-screen space-y-8 pb-32">
