@@ -13,6 +13,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@google/genai": "^2.3.0",
     "@supabase/supabase-js": "^2.42.0",
     "dotenv": "^16.4.5",
     "hono": "^4.0.0",

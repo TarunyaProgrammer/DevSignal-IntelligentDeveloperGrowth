@@ -9,6 +9,7 @@ import { resourceRoutes } from './routes/resources.js';
 import { snippetRoutes } from './routes/snippets.js';
 import { profileRoutes } from './routes/profile.js';
 import { activityRoutes } from './routes/activity.js';
+import { oraRoutes } from './routes/ora.js';
 
 type Bindings = {
   SUPABASE_URL: string;
@@ -83,7 +84,8 @@ app.route('/api', repoRoutes);
 app.route('/api', analyticsRoutes);
 app.route('/api', resourceRoutes);
 app.route('/api', snippetRoutes);
-app.route('/api', profileRoutes);
 app.route('/api', activityRoutes);
+app.route('/api', profileRoutes);
+app.route('/api/ora', oraRoutes);
 
 export default app;
