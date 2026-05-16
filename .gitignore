@@ -32,3 +32,5 @@ IMPLEMENT.md
 # Build/Dev tools
 .wrangler
 server/.wrangler
+.dev.vars
+server/.dev.vars

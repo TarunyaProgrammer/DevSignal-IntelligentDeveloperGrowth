@@ -16,6 +16,9 @@ import { Profile } from './pages/Profile';
 import { DebugChartPage } from './DebugChartPage';
 import { NotFound } from './pages/NotFound';
 import { CustomCursor } from './components/layout/CustomCursor';
+import { OraProvider } from './contexts/OraContext';
+import { OraOrb } from './components/ora/OraOrb';
+import { OraPage } from './pages/OraPage';
 
 import { useEffect } from 'react';
 
@@ -23,6 +26,9 @@ export default function App() {
   const location = useLocation();
 
   useEffect(() => {
+    // Scroll to top on route change
+    window.scrollTo(0, 0);
+
     const isLandingPage = location.pathname === '/';
     if (isLandingPage) {
       document.documentElement.classList.remove('light');
@@ -46,13 +52,16 @@ export default function App() {
     <ErrorBoundary>
       <ThemeProvider>
         <AuthProvider>
-          <SearchProvider>
-            <CustomCursor />
-            <AnimatePresence mode="wait">
-              <Routes location={location} key={location.pathname}>
-                <Route path="/" element={<LandingPage />} />
-                <Route element={<ProtectedRoute />}>
-                  <Route path="/dashboard" element={<Dashboard />} />
+          <OraProvider>
+            <SearchProvider>
+              <CustomCursor />
+              <OraOrb />
+              <AnimatePresence mode="wait">
+                <Routes location={location} key={location.pathname}>
+                  <Route path="/" element={<LandingPage />} />
+                  <Route element={<ProtectedRoute />}>
+                    <Route path="/ora" element={<OraPage />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/analytics" element={<Analytics />} />
                   <Route path="/repo/:id" element={<RepoDetail />} />
                   <Route path="/resources" element={<Resources />} />
@@ -64,7 +73,8 @@ export default function App() {
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </AnimatePresence>
-          </SearchProvider>
+            </SearchProvider>
+          </OraProvider>
         </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>

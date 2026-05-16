@@ -12,6 +12,7 @@ const navItems = [
 
 export function BottomNav() {
   const location = useLocation();
+  if (location.pathname === '/ora') return null;
 
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-lg px-6 transition-all duration-300 md:bottom-8">

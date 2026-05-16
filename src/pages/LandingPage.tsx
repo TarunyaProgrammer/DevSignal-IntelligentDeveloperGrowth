@@ -13,14 +13,14 @@ import { LandingFooter } from '../components/landing/LandingFooter';
 const SMOOTH_EASE = [0.16, 1, 0.3, 1] as const;
 
 export function LandingPage() {
-  const { signInWithGitHub, isAuthenticated } = useAuth();
+  const { signInWithGitHub, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard');
+    if (isAuthenticated && !isLoading) {
+      navigate('/ora');
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, isLoading, navigate]);
 
   return (
     <div className="dark bg-black min-h-screen">
