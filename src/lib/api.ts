@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { getSafeSession } from './supabase';
 
 const isLocalhost = typeof window !== 'undefined' && 
   (window.location.hostname === 'localhost' || 
@@ -8,7 +8,7 @@ const isLocalhost = typeof window !== 'undefined' &&
 export const API_URL = import.meta.env.VITE_API_URL || (isLocalhost ? 'http://localhost:3001' : window.location.origin);
 
 async function getAuthHeaders(): Promise<HeadersInit> {
-  const { data: { session } } = await supabase.auth.getSession();
+  const session = await getSafeSession();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };

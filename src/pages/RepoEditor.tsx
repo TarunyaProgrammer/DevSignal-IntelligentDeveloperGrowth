@@ -8,7 +8,7 @@ import { useOra } from '@/hooks/useOra';
 import { WebContainerTerminal } from '@/components/terminal/WebContainerTerminal';
 import { sendCommand, webcontainerInstance } from '@/lib/webcontainer';
 import { SEO } from '@/components/layout/SEO';
-import { supabase } from '@/lib/supabase';
+import { getSafeSession } from '@/lib/supabase';
 import { API_URL } from '@/lib/api';
 
 // Sub-components
@@ -39,7 +39,7 @@ export function RepoEditor() {
     if (!id) return;
     setIsSyncing(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const session = await getSafeSession();
       const headers: Record<string, string> = {};
       if (session?.access_token) {
         headers['Authorization'] = `Bearer ${session.access_token}`;
@@ -178,7 +178,7 @@ export function RepoEditor() {
         const file = await (item.handle as FileSystemFileHandle).getFile();
         content = await file.text();
       } else if (item.sha) {
-        const { data: { session } } = await supabase.auth.getSession();
+        const session = await getSafeSession();
         const headers: Record<string, string> = {};
         if (session?.access_token) {
           headers['Authorization'] = `Bearer ${session.access_token}`;

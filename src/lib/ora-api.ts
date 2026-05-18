@@ -1,8 +1,8 @@
-import { supabase } from './supabase';
+import { getSafeSession } from './supabase';
 import { API_URL } from './api';
 
 async function getAuthHeaders(): Promise<HeadersInit> {
-  const { data: { session } } = await supabase.auth.getSession();
+  const session = await getSafeSession();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { getSafeSession } from '@/lib/supabase';
 import { API_URL } from '@/lib/api';
 import { 
   ShieldCheck, 
@@ -44,7 +44,7 @@ export function Profile() {
   useEffect(() => {
     async function fetchProfile() {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const session = await getSafeSession();
         const headers: Record<string, string> = {};
         if (session?.access_token) {
           headers['Authorization'] = `Bearer ${session.access_token}`;

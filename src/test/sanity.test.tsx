@@ -14,6 +14,7 @@ vi.mock('@/lib/supabase', () => ({
       signOut: vi.fn(),
     },
   },
+  getSafeSession: vi.fn().mockResolvedValue(null),
 }))
 
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'

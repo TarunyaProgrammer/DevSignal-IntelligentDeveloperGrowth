@@ -9,6 +9,9 @@ vi.mock('@/lib/supabase', () => ({
       }),
     },
   },
+  getSafeSession: vi.fn().mockResolvedValue({
+    access_token: 'test-token',
+  }),
 }))
 
 describe('API client', () => {

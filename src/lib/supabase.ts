@@ -10,3 +10,13 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+
+export async function getSafeSession() {
+  try {
+    const { data } = await supabase.auth.getSession();
+    return data?.session ?? null;
+  } catch (err) {
+    console.warn('[DevSignal] Supabase getSession failed, using null:', err);
+    return null;
+  }
+}

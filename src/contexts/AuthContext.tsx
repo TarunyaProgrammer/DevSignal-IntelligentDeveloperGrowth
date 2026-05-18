@@ -19,19 +19,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
-      setSession(s);
-      setUser(s?.user ?? null);
-      setIsLoading(false);
-    });
+    supabase.auth.getSession()
+      .then(({ data: { session: s } }) => {
+        setSession(s);
+        setUser(s?.user ?? null);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.warn('[DevSignal] Initial auth session check failed:', err);
+        setIsLoading(false);
+      });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
-      setSession(s);
-      setUser(s?.user ?? null);
-      setIsLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    try {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+        setSession(s);
+        setUser(s?.user ?? null);
+        setIsLoading(false);
+      });
+      return () => {
+        subscription?.unsubscribe();
+      };
+    } catch (err) {
+      console.warn('[DevSignal] Auth state subscription failed:', err);
+    }
   }, []);
 
   const signInWithGitHub = async () => {
@@ -57,7 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       preferred_username: 'TarunyaProgrammer',
       avatar_url: 'https://avatars.githubusercontent.com/u/84562027?v=4'
     }
-  } as any;
+  } as unknown as User;
 
   // Reference state variables to satisfy TypeScript compiler unused variable checks
   if (user || session || isLoading) {
@@ -65,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user: mockUser, session: {} as any, isLoading: false, isAuthenticated: true, signInWithGitHub, logout }}>
+    <AuthContext.Provider value={{ user: mockUser, session: {} as unknown as Session, isLoading: false, isAuthenticated: true, signInWithGitHub, logout }}>
       {children}
     </AuthContext.Provider>
   );
