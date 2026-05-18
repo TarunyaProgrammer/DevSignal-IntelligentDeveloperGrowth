@@ -9,8 +9,7 @@ import { WebContainerTerminal } from '@/components/terminal/WebContainerTerminal
 import { sendCommand, webcontainerInstance } from '@/lib/webcontainer';
 import { SEO } from '@/components/layout/SEO';
 import { supabase } from '@/lib/supabase';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { API_URL } from '@/lib/api';
 
 // Sub-components
 import { EditorHeader } from '@/components/editor/EditorHeader';

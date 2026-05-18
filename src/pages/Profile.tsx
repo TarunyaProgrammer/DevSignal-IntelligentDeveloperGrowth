@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { API_URL } from '@/lib/api';
 import { 
   ShieldCheck, 
   Clock, 
@@ -51,8 +52,7 @@ export function Profile() {
           headers['x-ai-debug'] = 'ai-magic-2026';
           headers['Authorization'] = 'Bearer mock-debug-token';
         }
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-        const res = await fetch(`${apiUrl}/api/profile/summary`, {
+        const res = await fetch(`${API_URL}/api/profile/summary`, {
           headers
         });
         const result = await res.json();

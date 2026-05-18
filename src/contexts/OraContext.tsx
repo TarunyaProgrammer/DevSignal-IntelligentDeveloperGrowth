@@ -4,6 +4,7 @@ import { fetchOraChat } from '@/lib/ora-api';
 import type { OraMessage } from '@/lib/ora-api';
 import { useAuth } from './AuthContext';
 import { supabase } from '@/lib/supabase';
+import { API_URL } from '@/lib/api';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 
@@ -58,7 +59,7 @@ export function OraProvider({ children }: { children: ReactNode }) {
           headers['x-ai-debug'] = 'ai-magic-2026';
           headers['Authorization'] = 'Bearer mock-debug-token';
         }
-        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/profile/summary`, {
+        const res = await fetch(`${API_URL}/api/profile/summary`, {
           headers
         });
         if (res.ok) {
