@@ -55,7 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       full_name: 'Tarunya Programmer',
       user_name: 'TarunyaProgrammer',
       preferred_username: 'TarunyaProgrammer',
-      avatar_url: 'https://avatars.githubusercontent.com/u/1234567?v=4'
+      avatar_url: 'https://avatars.githubusercontent.com/u/84562027?v=4'
     }
   } as any;
 
