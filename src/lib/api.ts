@@ -1,5 +1,7 @@
 import { getSafeSession } from './supabase';
 
+import { shouldBypassLiveAuth } from './env';
+
 const isLocalhost = typeof window !== 'undefined' && 
   (window.location.hostname === 'localhost' || 
    window.location.hostname === '127.0.0.1' || 
@@ -12,11 +14,11 @@ async function getAuthHeaders(): Promise<HeadersInit> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
-  if (session?.access_token) {
-    headers['Authorization'] = `Bearer ${session.access_token}`;
-  } else {
+  if (shouldBypassLiveAuth()) {
     headers['x-ai-debug'] = 'ai-magic-2026';
     headers['Authorization'] = 'Bearer mock-debug-token';
+  } else if (session?.access_token) {
+    headers['Authorization'] = `Bearer ${session.access_token}`;
   }
   return headers;
 }

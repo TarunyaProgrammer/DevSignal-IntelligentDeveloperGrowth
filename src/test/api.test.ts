@@ -14,6 +14,11 @@ vi.mock('@/lib/supabase', () => ({
   }),
 }))
 
+vi.mock('@/lib/env', () => ({
+  getAppMode: () => 'production',
+  shouldBypassLiveAuth: () => false,
+}))
+
 describe('API client', () => {
   it('should include authorization header in requests', async () => {
     const mockFetch = vi.fn().mockResolvedValue({

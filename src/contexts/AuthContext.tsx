@@ -13,12 +13,19 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+import { shouldBypassLiveAuth } from '@/lib/env';
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!shouldBypassLiveAuth());
+  const [isSandboxFallback, setIsSandboxFallback] = useState(false);
 
   useEffect(() => {
+    if (shouldBypassLiveAuth()) {
+      return;
+    }
+
     supabase.auth.getSession()
       .then(({ data: { session: s } }) => {
         setSession(s);
@@ -26,7 +33,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false);
       })
       .catch((err) => {
-        console.warn('[DevSignal] Initial auth session check failed:', err);
+        if (err instanceof TypeError || (err instanceof Error && err.message.includes('fetch'))) {
+          console.warn('[DevSignal] Supabase is unreachable, dynamically falling back to Sandbox Mode:', err);
+          setIsSandboxFallback(true);
+        } else {
+          console.error('[DevSignal] Initial auth session check failed:', err);
+        }
         setIsLoading(false);
       });
 
@@ -45,6 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signInWithGitHub = async () => {
+    if (shouldBypassLiveAuth() || isSandboxFallback) return;
     await supabase.auth.signInWithOAuth({
       provider: 'github',
       options: { redirectTo: `${window.location.origin}/ora` },
@@ -52,6 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
+    if (shouldBypassLiveAuth() || isSandboxFallback) return;
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
@@ -69,13 +83,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   } as unknown as User;
 
-  // Reference state variables to satisfy TypeScript compiler unused variable checks
-  if (user || session || isLoading) {
-    // Active mock
-  }
+  const bypass = shouldBypassLiveAuth() || isSandboxFallback;
+  const activeUser = bypass ? mockUser : user;
+  const activeSession = bypass ? ({ access_token: 'mock-debug-token', user: mockUser } as unknown as Session) : session;
+  const activeIsLoading = bypass ? false : isLoading;
+  const activeIsAuthenticated = bypass ? true : !!user;
 
   return (
-    <AuthContext.Provider value={{ user: mockUser, session: {} as unknown as Session, isLoading: false, isAuthenticated: true, signInWithGitHub, logout }}>
+    <AuthContext.Provider value={{ 
+      user: activeUser, 
+      session: activeSession, 
+      isLoading: activeIsLoading, 
+      isAuthenticated: activeIsAuthenticated, 
+      signInWithGitHub, 
+      logout 
+    }}>
       {children}
     </AuthContext.Provider>
   );
