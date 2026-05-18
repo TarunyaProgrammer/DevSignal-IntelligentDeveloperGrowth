@@ -19,6 +19,7 @@ import { NotFound } from './pages/NotFound';
 import { CustomCursor } from './components/layout/CustomCursor';
 import { OraProvider } from './contexts/OraContext';
 import { OraOrb } from './components/ora/OraOrb';
+import { DevScoreProvider } from './contexts/DevScoreContext';
 import { OraPage } from './pages/OraPage';
 
 import { useEffect } from 'react';
@@ -54,6 +55,7 @@ export default function App() {
       <ThemeProvider>
         <AuthProvider>
           <OraProvider>
+            <DevScoreProvider>
             <SearchProvider>
               <CustomCursor />
               <OraOrb />
@@ -76,6 +78,7 @@ export default function App() {
               </Routes>
             </AnimatePresence>
             </SearchProvider>
+            </DevScoreProvider>
           </OraProvider>
         </AuthProvider>
       </ThemeProvider>

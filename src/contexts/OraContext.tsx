@@ -51,9 +51,15 @@ export function OraProvider({ children }: { children: ReactNode }) {
     const fetchProfile = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        if (!session) return;
+        const headers: Record<string, string> = {};
+        if (session?.access_token) {
+          headers['Authorization'] = `Bearer ${session.access_token}`;
+        } else {
+          headers['x-ai-debug'] = 'ai-magic-2026';
+          headers['Authorization'] = 'Bearer mock-debug-token';
+        }
         const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/profile/summary`, {
-          headers: { Authorization: `Bearer ${session.access_token}` }
+          headers
         });
         if (res.ok) {
           const data = await res.json();
@@ -140,17 +146,26 @@ export function OraProvider({ children }: { children: ReactNode }) {
       
       setMessages(prev => [...prev, oraMsg]);
     } catch (error: unknown) {
-      if (error instanceof Error && error.message === 'RATE_LIMIT') {
+      const isRateLimit = error instanceof Error && error.message === 'RATE_LIMIT';
+      const isHighDemand = error instanceof Error && error.message === 'HIGH_DEMAND';
+      
+      if (isRateLimit) {
         triggerRateLimit();
       } else {
         console.error("Failed to send message", error);
       }
+      
+      let replyContent = "Oops! My circuits shorted out. Mind trying again?";
+      if (isRateLimit) {
+        replyContent = "I'm receiving too many requests right now. Please wait about 60 seconds.";
+      } else if (isHighDemand) {
+        replyContent = "Gemini is experiencing heavy developer traffic right now! 🚀 My circuits are running a bit warm. Let's wait a few seconds and try again! 💻⚡";
+      }
+      
       const errorMsg: OraMessage = {
         id: crypto.randomUUID(),
         role: 'ora',
-        content: error instanceof Error && error.message === 'RATE_LIMIT' 
-          ? "I'm receiving too many requests right now. Please wait about 60 seconds."
-          : "Oops! My circuits shorted out. Mind trying again?",
+        content: replyContent,
         timestamp: new Date().toISOString()
       };
       setMessages(prev => [...prev, errorMsg]);

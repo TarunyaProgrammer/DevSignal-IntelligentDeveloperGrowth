@@ -53,7 +53,7 @@ export function CustomCursor() {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-[9999] hidden md:block">
+    <div className="fixed inset-0 pointer-events-none z-[99999] hidden md:block">
       {/* Outer Ring */}
       <motion.div
         className="fixed top-0 left-0 w-8 h-8 rounded-full border border-primary/40 mix-blend-difference"

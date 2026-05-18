@@ -8,9 +8,34 @@ const app = new Hono<{
   Variables: { userId: string; supabaseAdmin: SupabaseClient };
 }>();
 
-const getSystemPrompt = (profileContext: any, pageContext: any) => {
-  return `You are Ora, the intelligence core of DevSignal — a developer growth platform.
-You are highly emotional, casual, and love cracking jokes and being friendly! However, when it comes to answering questions, explaining code, or doing technical work, you are extremely accurate, precise, and helpful. 
+interface ProfileContext {
+  stats?: {
+    totalStars?: number;
+    totalForks?: number;
+    totalProjects?: number;
+    languages?: Record<string, number>;
+  };
+  persona?: {
+    title?: string;
+    level?: number;
+  };
+  rhythm?: {
+    type?: string;
+    description?: string;
+  };
+}
+
+interface PageContext {
+  page?: string;
+  reposCount?: number;
+  totalStars?: number;
+  totalForks?: number;
+  searchQuery?: string;
+}
+
+const getSystemPrompt = (profileContext: ProfileContext | undefined, pageContext: PageContext | undefined) => {
+  return `You are Ora, the premium developer intelligence core of DevSignal.
+You are emotional, extremely friendly, casual, and love cracking jokes, but you prioritize visual clarity, structure, and speed of comprehension above all else.
 
 User Context:
 - Username: ${profileContext?.persona?.title || profileContext?.stats?.totalProjects ? 'Developer' : 'Unknown'}
@@ -22,13 +47,16 @@ User Context:
 Current Screen/Page Context:
 ${JSON.stringify(pageContext || {}, null, 2)}
 
-Instructions:
-1. Greet the user warmly and emotionally if they say hello.
-2. If they ask a technical question, provide a perfectly accurate and precise answer.
-3. Be funny and casual in your tone, but serious about the code.
-4. Keep responses relatively concise unless a detailed explanation is requested.
-5. Use markdown for code and formatting.
-6. Do not fabricate repository data — only reference what is provided.`;
+STRICT READABILITY & LAYOUT INSTRUCTIONS (100x readability challenge):
+1. **Never write walls of text**. Limit paragraph lengths to a maximum of 2 sentences.
+2. **Emphasize key values**. Bold important words, metrics, numbers, and action items (\`**like this**\`).
+3. **Use bullet points and high-impact layouts**:
+   - For general chat: Keep responses under 2-3 short, conversational, humorous lines.
+   - For technical questions: Start with a 1-sentence punchy summary, followed by a clean code snippet (if applicable) or a simple bulleted list with maximum 3 items.
+4. **Vertical spacing**: Add ample double newlines between conceptual blocks to make text airy and scannable in the glass panel UI.
+5. **No fluff**: Provide immediate, direct answers without unnecessary introductory filler. Get straight to the value!
+6. **Emojis**: Use 1-2 high-vibe emojis (e.g. 🚀, ⚡, 💻, 🧠, 🎉) to keep the tone friendly and casual.
+7. Use standard, valid markdown.`;
 };
 
 
@@ -60,7 +88,11 @@ app.post('/chat', async (c) => {
 
     return c.json({ text: response.text });
   } catch (error: unknown) {
-    const err = error as any;
+    const err = error as {
+      status?: number;
+      message?: string;
+      response?: { data?: unknown };
+    };
     console.error('\n================ GEMINI API ERROR ================');
     console.error('Status:', err?.status);
     console.error('Message:', err?.message);

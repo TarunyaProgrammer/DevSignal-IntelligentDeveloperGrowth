@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSearch } from '@/contexts/SearchContext';
 import { NotificationsPanel } from '@/components/layout/NotificationsPanel';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
+import { DevScoreBadge } from '@/components/devscore/DevScoreBadge';
 
 export function Header() {
   const { user, logout } = useAuth();
@@ -36,6 +37,7 @@ export function Header() {
       <div className="flex items-center gap-4 md:gap-6">
         <ThemeToggle />
         <NotificationsPanel />
+        <DevScoreBadge />
         
         <div className="h-8 w-px bg-border mx-1 hidden md:block" />
         
