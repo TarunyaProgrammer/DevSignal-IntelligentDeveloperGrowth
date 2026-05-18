@@ -40,7 +40,7 @@ app.get('/activity', async (c) => {
       }
     }
 
-    if (!githubUsername) {
+    if (!githubUsername || githubUsername === 'ai-debug-session') {
       console.warn({ userId }, 'No GitHub username identified for activity fetch');
       return c.json({ activities: [] });
     }

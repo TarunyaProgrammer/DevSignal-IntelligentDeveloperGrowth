@@ -8,7 +8,7 @@ const app = new Hono<{
   Variables: { userId: string; supabaseAdmin: SupabaseClient };
 }>();
 
-const getSystemPrompt = (profileContext: Record<string, unknown> | null, pageContext: Record<string, unknown> | null) => {
+const getSystemPrompt = (profileContext: any, pageContext: any) => {
   return `You are Ora, the intelligence core of DevSignal — a developer growth platform.
 You are highly emotional, casual, and love cracking jokes and being friendly! However, when it comes to answering questions, explaining code, or doing technical work, you are extremely accurate, precise, and helpful. 
 

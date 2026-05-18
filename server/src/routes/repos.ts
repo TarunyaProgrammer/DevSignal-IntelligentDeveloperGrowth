@@ -223,7 +223,17 @@ app.get('/repos/:id/tree', async (c) => {
       recursive: 'true'
     });
 
-    return c.json({ tree: treeData.tree });
+    const filteredTree = treeData.tree.filter((item: any) => {
+      const parts = item.path.split('/');
+      return !parts.includes('node_modules') &&
+             !parts.includes('.git') &&
+             !parts.includes('dist') &&
+             !parts.includes('build') &&
+             !parts.includes('.next') &&
+             !parts.includes('.svelte-kit');
+    });
+
+    return c.json({ tree: filteredTree });
   } catch (err: unknown) {
     console.error('Failed to fetch tree:', err);
     return c.json({ error: 'Failed to fetch file tree' }, 500);

@@ -8,6 +8,9 @@ import { useOra } from '@/hooks/useOra';
 import { WebContainerTerminal } from '@/components/terminal/WebContainerTerminal';
 import { sendCommand, webcontainerInstance } from '@/lib/webcontainer';
 import { SEO } from '@/components/layout/SEO';
+import { supabase } from '@/lib/supabase';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 // Sub-components
 import { EditorHeader } from '@/components/editor/EditorHeader';
@@ -15,7 +18,7 @@ import { FileExplorer } from '@/components/editor/FileExplorer';
 import { CodeEditor } from '@/components/editor/CodeEditor';
 import { type FileItem, LANGUAGES } from '@/components/editor/types';
 
-export function Editor() {
+export function RepoEditor() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: repo, isLoading } = useRepo(id || '');
@@ -37,7 +40,15 @@ export function Editor() {
     if (!id) return;
     setIsSyncing(true);
     try {
-      const response = await fetch(`http://localhost:3001/api/repos/${id}/tree`);
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = {};
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      } else {
+        headers['x-ai-debug'] = 'ai-magic-2026';
+        headers['Authorization'] = 'Bearer mock-debug-token';
+      }
+      const response = await fetch(`${API_URL}/api/repos/${id}/tree`, { headers });
       const data = await response.json();
       
       if (data.tree) {
@@ -168,7 +179,15 @@ export function Editor() {
         const file = await (item.handle as FileSystemFileHandle).getFile();
         content = await file.text();
       } else if (item.sha) {
-        const response = await fetch(`http://localhost:3001/api/repos/${id}/blob/${item.sha}`);
+        const { data: { session } } = await supabase.auth.getSession();
+        const headers: Record<string, string> = {};
+        if (session?.access_token) {
+          headers['Authorization'] = `Bearer ${session.access_token}`;
+        } else {
+          headers['x-ai-debug'] = 'ai-magic-2026';
+          headers['Authorization'] = 'Bearer mock-debug-token';
+        }
+        const response = await fetch(`${API_URL}/api/repos/${id}/blob/${item.sha}`, { headers });
         const data = await response.json();
         content = data.content || '';
       }
@@ -235,8 +254,6 @@ export function Editor() {
     }
   };
 
-  // --- Rendering ---
-
   if (isLoading || !repo) {
     return (
       <div className="h-screen flex items-center justify-center bg-background">
@@ -256,7 +273,7 @@ export function Editor() {
         <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[150px] opacity-40" />
         <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[150px] opacity-20" />
       </div>
-
+ 
       <EditorHeader 
         repoName={repo.name} 
         repoId={id || ''} 

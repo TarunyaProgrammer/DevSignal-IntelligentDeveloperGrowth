@@ -10,7 +10,8 @@ import { Dashboard } from './pages/Dashboard';
 import { Analytics } from './pages/Analytics';
 import { Resources } from './pages/Resources';
 import { LearningPathPage } from './pages/LearningPathPage';
-import { Editor } from './pages/Editor';
+import { SandboxEditor } from './pages/SandboxEditor';
+import { RepoEditor } from './pages/RepoEditor';
 import { RepoDetail } from './pages/RepoDetail';
 import { Profile } from './pages/Profile';
 import { DebugChartPage } from './DebugChartPage';
@@ -66,7 +67,8 @@ export default function App() {
                   <Route path="/repo/:id" element={<RepoDetail />} />
                   <Route path="/resources" element={<Resources />} />
                   <Route path="/learning-path/:courseId" element={<LearningPathPage />} />
-                  <Route path="/editor/:id" element={<Editor />} />
+                  <Route path="/editor" element={<SandboxEditor />} />
+                  <Route path="/editor/:id" element={<RepoEditor />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/debug-chart" element={<DebugChartPage />} />
                 </Route>
